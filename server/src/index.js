@@ -25,16 +25,9 @@ const PORT = process.env.PORT || 5001;
 // Trust proxy - required for Railway deployment
 app.set('trust proxy', 1);
 
-// CORS configuration with environment variable support
-const allowedOrigins = process.env.CLIENT_URL
-  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
-  : ['http://localhost:5173'];
-
-console.log('CLIENT_URL from env:', process.env.CLIENT_URL);
-console.log('Allowed origins:', allowedOrigins);
-
+// CORS configuration - allow all origins
 app.use(cors({
-  origin: allowedOrigins,
+  origin: true,
   credentials: true
 }));
 
