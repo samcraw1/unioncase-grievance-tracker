@@ -2,7 +2,14 @@ import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
-dotenv.config();
+// Only load .env file in development (Railway provides env vars directly)
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
+
+// Debug logging to diagnose DATABASE_URL issue
+console.log('DATABASE_URL defined:', !!process.env.DATABASE_URL);
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
 // Support Railway's DATABASE_URL or individual connection params
 const pool = process.env.DATABASE_URL
