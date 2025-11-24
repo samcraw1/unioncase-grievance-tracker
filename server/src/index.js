@@ -23,7 +23,7 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Trust proxy - required for Railway deployment
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 // CORS configuration with environment variable support
 const allowedOrigins = process.env.CLIENT_URL
@@ -42,6 +42,7 @@ const apiLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Disable trust proxy validation for Railway
 });
 
 // Stricter rate limiting for auth endpoints
@@ -51,6 +52,7 @@ const authLimiter = rateLimit({
   message: 'Too many login attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }, // Disable trust proxy validation for Railway
 });
 
 // Apply rate limiting
