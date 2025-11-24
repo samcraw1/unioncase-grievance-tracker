@@ -26,9 +26,12 @@ const PORT = process.env.PORT || 5001;
 app.set('trust proxy', 1);
 
 // CORS configuration with environment variable support
-// TEMPORARY: Allow all origins for testing
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+  : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: true,
+  origin: allowedOrigins,
   credentials: true
 }));
 
