@@ -46,10 +46,10 @@ const LoginPage = () => {
             className="mx-auto h-24 w-auto mb-6"
           />
           <h1 className="text-4xl font-bold text-primary mb-2">
-            UnionCase - Grievance Tracker
+            Letter Carrier Grievance Tracker
           </h1>
           <p className="text-gray-600">
-            Track and manage workplace grievances
+            Built by a city carrier, for NALC and NRLCA stewards
           </p>
         </div>
       </div>

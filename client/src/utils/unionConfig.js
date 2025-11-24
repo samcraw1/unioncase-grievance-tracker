@@ -125,9 +125,6 @@ export function getCraftLabel(craft) {
     cca: 'CCA (City Carrier Assistant)',
     rural_carrier: 'Rural Carrier',
     rca: 'RCA (Rural Carrier Associate)',
-    clerk: 'Clerk',
-    maintenance: 'Maintenance',
-    mvs: 'Motor Vehicle Service',
     other: 'Other'
   };
   return labels[craft] || craft;
@@ -141,19 +138,10 @@ export function getCraftsGrouped() {
   return [
     {
       union: 'nalc',
-      label: 'NALC - Letter Carriers',
+      label: 'NALC - City Carriers',
       crafts: [
         { value: 'city_carrier', label: 'City Carrier' },
         { value: 'cca', label: 'CCA (City Carrier Assistant)' }
-      ]
-    },
-    {
-      union: 'apwu',
-      label: 'APWU - Postal Workers',
-      crafts: [
-        { value: 'clerk', label: 'Clerk' },
-        { value: 'maintenance', label: 'Maintenance' },
-        { value: 'mvs', label: 'Motor Vehicle Service' }
       ]
     },
     {
@@ -166,7 +154,7 @@ export function getCraftsGrouped() {
     },
     {
       union: 'other',
-      label: 'Other',
+      label: 'Other USPS Positions',
       crafts: [
         { value: 'other', label: 'Other' }
       ]

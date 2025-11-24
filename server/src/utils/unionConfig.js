@@ -143,9 +143,6 @@ export function getCraftLabel(craft) {
     cca: 'CCA (City Carrier Assistant)',
     rural_carrier: 'Rural Carrier',
     rca: 'RCA (Rural Carrier Associate)',
-    clerk: 'Clerk',
-    maintenance: 'Maintenance',
-    mvs: 'Motor Vehicle Service',
     other: 'Other'
   };
   return labels[craft] || craft;

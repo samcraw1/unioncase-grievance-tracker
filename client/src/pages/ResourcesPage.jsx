@@ -37,6 +37,42 @@ const ResourcesPage = () => {
     }
   ];
 
+  // NRLCA Handbooks data
+  const nrlcaHandbooks = [
+    {
+      id: 1,
+      title: 'PO-603: Rural Carrier Duties and Responsibilities',
+      description: 'Official USPS handbook covering all duties, responsibilities, and procedures for rural letter carriers. Includes delivery standards, route evaluation, vehicle requirements, and daily operational procedures.',
+      date: 'September 2013',
+      filename: 'PO-603-Rural-Carrier-Duties-and-Responsibilities-September-2013.pdf',
+      size: 'Large File'
+    },
+    {
+      id: 2,
+      title: '2024-2027 NRLCA National Agreement',
+      description: 'The complete collective bargaining agreement between NRLCA and USPS. Contains all contract articles governing rural carrier working conditions, pay, and rights.',
+      date: '2024-2027',
+      filename: '2024-2027-NRLCA-National-Agreement.pdf',
+      size: 'Medium File'
+    },
+    {
+      id: 3,
+      title: 'ELM: Employee and Labor Relations Manual',
+      description: 'Complete guide to employee rights, discipline procedures, grievance processes, and labor relations. The definitive resource for just cause, investigative interviews, and all disciplinary matters. (Same ELM applies to all USPS crafts)',
+      date: 'March 2022 (Issue 52)',
+      filename: 'ELM-52-March-2022.pdf',
+      size: 'Large File'
+    },
+    {
+      id: 4,
+      title: 'PTF: 22 Things to Know',
+      description: 'Essential guide for Part-Time Flexible (PTF) rural carriers covering rights, benefits, scheduling, and important provisions.',
+      date: 'March 2019',
+      filename: 'PTF-22-Things-to-Know.pdf',
+      size: 'Small File'
+    }
+  ];
+
   // NALC Resources data
   const nalcResources = [
     {
@@ -62,6 +98,34 @@ const ResourcesPage = () => {
       url: 'https://www.nalc.org/workplace-issues/resources',
       icon: BookOpen,
       buttonText: 'Visit NALC.org'
+    }
+  ];
+
+  // NRLCA Resources data
+  const nrlcaResources = [
+    {
+      id: 1,
+      title: 'NRLCA National Agreement',
+      description: 'Access the complete rural carrier collective bargaining agreement and contract resources.',
+      url: 'https://www.nrlca.org/Contract',
+      icon: FileText,
+      buttonText: 'Visit NRLCA.org'
+    },
+    {
+      id: 2,
+      title: 'Rural Carrier Steward Resources',
+      description: 'Training materials, guides, and resources for rural carrier stewards and representatives.',
+      url: 'https://www.nrlca.org/Stewards',
+      icon: BookOpen,
+      buttonText: 'Visit NRLCA.org'
+    },
+    {
+      id: 3,
+      title: 'NRLCA Forms & Documents',
+      description: 'Official forms, grievance templates, and documentation for rural carriers.',
+      url: 'https://www.nrlca.org/Resources',
+      icon: Download,
+      buttonText: 'Visit NRLCA.org'
     }
   ];
 
@@ -94,7 +158,7 @@ const ResourcesPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold mb-2">Resources & Handbooks</h1>
           <p className="text-blue-100">
-            Access USPS handbooks, NALC resources, and quick reference guides
+            Access USPS handbooks, NALC & NRLCA resources, and quick reference guides
           </p>
         </div>
       </div>
@@ -164,11 +228,63 @@ const ResourcesPage = () => {
           </div>
         </section>
 
-        {/* Section 2: NALC Resources */}
+        {/* Section 2: NRLCA Handbooks (Rural Carriers) */}
+        <section className="mb-12">
+          <div className="flex items-center mb-6">
+            <FileText className="h-6 w-6 text-green-600 mr-2" />
+            <h2 className="text-2xl font-bold text-gray-900">NRLCA Handbooks (Rural Carriers)</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {nrlcaHandbooks.map((handbook) => (
+              <div key={handbook.id} className="card hover:shadow-lg transition-shadow">
+                {/* Card Header */}
+                <div className="flex items-start mb-4">
+                  <FileText className="h-8 w-8 text-green-600 mr-3 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      {handbook.title}
+                    </h3>
+                    <p className="text-xs text-gray-500">{handbook.date}</p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  {handbook.description}
+                </p>
+
+                {/* File Size */}
+                <p className="text-xs text-gray-500 mb-4">{handbook.size}</p>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <a
+                    href={`/docs/nrlca/${handbook.filename}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 text-center py-2 px-3 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    View PDF
+                  </a>
+                  <a
+                    href={`/docs/nrlca/${handbook.filename}`}
+                    download
+                    className="flex items-center justify-center px-3 py-2 border border-green-600 text-green-600 rounded-md hover:bg-green-600 hover:text-white transition-colors text-sm"
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Section 3: NALC Resources (City Carriers) */}
         <section className="mb-12">
           <div className="flex items-center mb-6">
             <ExternalLink className="h-6 w-6 text-red-600 mr-2" />
-            <h2 className="text-2xl font-bold text-gray-900">NALC Resources</h2>
+            <h2 className="text-2xl font-bold text-gray-900">NALC Resources (City Carriers)</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -210,7 +326,53 @@ const ResourcesPage = () => {
           </div>
         </section>
 
-        {/* Section 3: Quick Reference Guides */}
+        {/* Section 4: NRLCA Online Resources (Rural Carriers) */}
+        <section className="mb-12">
+          <div className="flex items-center mb-6">
+            <ExternalLink className="h-6 w-6 text-green-600 mr-2" />
+            <h2 className="text-2xl font-bold text-gray-900">NRLCA Online Resources (Rural Carriers)</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {nrlcaResources.map((resource) => {
+              const IconComponent = resource.icon;
+              return (
+                <div key={resource.id} className="card hover:shadow-lg transition-shadow">
+                  {/* Card Header */}
+                  <div className="flex items-start mb-4">
+                    <IconComponent className="h-8 w-8 text-green-600 mr-3 flex-shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        {resource.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                    {resource.description}
+                  </p>
+
+                  {/* Action Button */}
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary w-full text-center flex items-center justify-center gap-2"
+                    style={{ backgroundColor: '#16a34a', borderColor: '#16a34a' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#15803d'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#16a34a'}
+                  >
+                    {resource.buttonText}
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Section 5: Quick Reference Guides */}
         <section className="mb-12">
           <div className="flex items-center mb-6">
             <Clock className="h-6 w-6 text-primary mr-2" />

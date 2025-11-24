@@ -1,10 +1,10 @@
-# USPS Grievance Tracker
+# Letter Carrier Grievance Tracker
 
-A Progressive Web Application for USPS employees and union stewards to track and manage workplace grievances through the formal grievance process.
+A Progressive Web Application for letter carriers (NALC and NRLCA) and union stewards to track and manage workplace grievances through the formal grievance process.
 
 ## Overview
 
-This application helps USPS employees and union stewards:
+This application helps city and rural letter carriers and their union stewards:
 - Document and track workplace grievances
 - Manage the multi-step grievance process (Informal Step A → Formal Step A → Step B → Arbitration)
 - Store evidence and documentation

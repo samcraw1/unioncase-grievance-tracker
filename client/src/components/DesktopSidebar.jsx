@@ -51,7 +51,7 @@ const DesktopSidebar = () => {
           />
           <div>
             <h1 className="text-lg font-bold">UnionCase</h1>
-            <p className="text-xs text-blue-200">NALC Grievance Tracker</p>
+            <p className="text-xs text-blue-200">Grievance Tracker</p>
           </div>
         </div>
       </div>

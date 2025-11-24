@@ -12,6 +12,7 @@ const registerValidation = [
   body('firstName').notEmpty().withMessage('First name is required'),
   body('lastName').notEmpty().withMessage('Last name is required'),
   body('role').isIn(['employee', 'steward', 'representative']).withMessage('Invalid role'),
+  body('craft').isIn(['city_carrier', 'cca', 'rural_carrier', 'rca', 'other']).withMessage('Invalid craft selection'),
 ];
 
 const loginValidation = [

@@ -149,7 +149,7 @@ const AdvancedSearch = ({ onSearch, onReset }) => {
             {/* Craft Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Craft
+                Position
               </label>
               <select
                 name="craft"
@@ -157,14 +157,11 @@ const AdvancedSearch = ({ onSearch, onReset }) => {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">All Crafts</option>
+                <option value="">All Positions</option>
                 <option value="city_carrier">City Carrier</option>
                 <option value="cca">City Carrier Assistant</option>
                 <option value="rural_carrier">Rural Carrier</option>
                 <option value="rca">Rural Carrier Associate</option>
-                <option value="clerk">Clerk</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="mvs">Motor Vehicle Service</option>
                 <option value="other">Other</option>
               </select>
             </div>

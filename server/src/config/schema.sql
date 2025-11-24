@@ -173,7 +173,7 @@ CREATE TABLE public.grievances (
     settlement_amount numeric(10,2),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT grievances_craft_check CHECK (((craft)::text = ANY ((ARRAY['city_carrier'::character varying, 'cca'::character varying, 'rural_carrier'::character varying, 'rca'::character varying, 'clerk'::character varying, 'maintenance'::character varying, 'mvs'::character varying, 'other'::character varying])::text[]))),
+    CONSTRAINT grievances_craft_check CHECK (((craft)::text = ANY ((ARRAY['city_carrier'::character varying, 'cca'::character varying, 'rural_carrier'::character varying, 'rca'::character varying, 'other'::character varying])::text[]))),
     CONSTRAINT grievances_current_step_check CHECK (((current_step)::text = ANY ((ARRAY['filed'::character varying, 'informal_step_a'::character varying, 'formal_step_a'::character varying, 'step_b'::character varying, 'arbitration'::character varying, 'resolved'::character varying, 'settled'::character varying, 'denied'::character varying])::text[]))),
     CONSTRAINT grievances_status_check CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'resolved'::character varying, 'settled'::character varying, 'denied'::character varying, 'withdrawn'::character varying])::text[])))
 );
@@ -304,7 +304,7 @@ CREATE TABLE public.users (
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     notification_preferences jsonb DEFAULT '{"new_notes": true, "email_enabled": true, "new_grievance": true, "reminder_days": [3, 1, 0], "status_updates": true, "deadline_reminders": true, "grievance_resolved": true}'::jsonb,
     last_email_sent_at timestamp without time zone,
-    CONSTRAINT users_craft_check CHECK (((craft)::text = ANY ((ARRAY['city_carrier'::character varying, 'cca'::character varying, 'rural_carrier'::character varying, 'rca'::character varying, 'clerk'::character varying, 'maintenance'::character varying, 'mvs'::character varying, 'other'::character varying])::text[]))),
+    CONSTRAINT users_craft_check CHECK (((craft)::text = ANY ((ARRAY['city_carrier'::character varying, 'cca'::character varying, 'rural_carrier'::character varying, 'rca'::character varying, 'other'::character varying])::text[]))),
     CONSTRAINT users_union_type_check CHECK (((union_type)::text = ANY ((ARRAY['nalc'::character varying, 'apwu'::character varying, 'nrlca'::character varying])::text[]))),
     CONSTRAINT users_role_check CHECK (((role)::text = ANY ((ARRAY['employee'::character varying, 'steward'::character varying, 'representative'::character varying])::text[])))
 );
