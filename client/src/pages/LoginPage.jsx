@@ -46,7 +46,7 @@ const LoginPage = () => {
             className="mx-auto h-24 w-auto mb-6"
           />
           <h1 className="text-4xl font-bold text-primary mb-2">
-            NALC Grievance Tracker
+            UnionCase - Grievance Tracker
           </h1>
           <p className="text-gray-600">
             Track and manage workplace grievances

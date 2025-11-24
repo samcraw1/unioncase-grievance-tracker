@@ -4,6 +4,22 @@ import { validationResult } from 'express-validator';
 import pool from '../config/database.js';
 import { getUnionFromCraft } from '../utils/unionConfig.js';
 
+/**
+ * Register a new user
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing user data
+ * @param {string} req.body.email - User's email address
+ * @param {string} req.body.password - User's password (will be hashed)
+ * @param {string} req.body.firstName - User's first name
+ * @param {string} req.body.lastName - User's last name
+ * @param {string} req.body.employeeId - Optional employee ID
+ * @param {string} req.body.role - User role (employee, steward, representative)
+ * @param {string} req.body.facility - User's work facility
+ * @param {string} req.body.craft - User's craft/job classification
+ * @param {string} req.body.phone - Optional phone number
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with token and user data
+ */
 export const register = async (req, res) => {
   try {
     // Check validation errors
@@ -94,6 +110,15 @@ export const register = async (req, res) => {
   }
 };
 
+/**
+ * Authenticate user and return JWT token
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing login credentials
+ * @param {string} req.body.email - User's email address
+ * @param {string} req.body.password - User's password
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with token and user data
+ */
 export const login = async (req, res) => {
   try {
     // Check validation errors
@@ -167,6 +192,14 @@ export const login = async (req, res) => {
   }
 };
 
+/**
+ * Get authenticated user's profile
+ * @param {Object} req - Express request object
+ * @param {Object} req.user - User object from authentication middleware
+ * @param {number} req.user.userId - Authenticated user's ID
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with user profile data
+ */
 export const getProfile = async (req, res) => {
   try {
     const result = await pool.query(

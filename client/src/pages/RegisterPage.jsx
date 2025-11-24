@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, User, Hash, Building, Briefcase, Phone, AlertCircle } from 'lucide-react';
+import { getCraftsGrouped } from '../utils/unionConfig';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const RegisterPage = () => {
     employeeId: '',
     role: 'employee',
     facility: '',
-    craft: 'carrier',
+    craft: 'city_carrier',
     phone: ''
   });
   const [error, setError] = useState('');
@@ -286,7 +287,7 @@ const RegisterPage = () => {
 
               <div>
                 <label htmlFor="craft" className="label">
-                  Craft
+                  Union & Position
                 </label>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -298,12 +299,17 @@ const RegisterPage = () => {
                     value={formData.craft}
                     onChange={handleChange}
                     className="input-field pl-10"
+                    required
                   >
-                    <option value="carrier">Carrier</option>
-                    <option value="clerk">Clerk</option>
-                    <option value="maintenance">Maintenance</option>
-                    <option value="supervisor">Supervisor</option>
-                    <option value="other">Other</option>
+                    {getCraftsGrouped().map(group => (
+                      <optgroup key={group.union} label={group.label}>
+                        {group.crafts.map(craft => (
+                          <option key={craft.value} value={craft.value}>
+                            {craft.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
               </div>

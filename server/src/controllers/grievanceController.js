@@ -1,6 +1,9 @@
 import pool from '../config/database.js';
 
-// Generate unique grievance number
+/**
+ * Generate unique grievance number in format GRVNC-YYYY-####
+ * @returns {Promise<string>} Generated grievance number
+ */
 const generateGrievanceNumber = async () => {
   const year = new Date().getFullYear();
   const result = await pool.query(
@@ -11,6 +14,14 @@ const generateGrievanceNumber = async () => {
   return `GRVNC-${year}-${String(count).padStart(4, '0')}`;
 };
 
+/**
+ * Create a new grievance
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Grievance data
+ * @param {Object} req.user - Authenticated user from middleware
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with created grievance data
+ */
 export const createGrievance = async (req, res) => {
   const client = await pool.connect();
 
@@ -107,6 +118,15 @@ export const createGrievance = async (req, res) => {
   }
 };
 
+/**
+ * Get list of grievances with filtering and pagination
+ * Access control applied based on user role
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters for filtering
+ * @param {Object} req.user - Authenticated user
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with grievances array and pagination info
+ */
 export const getGrievances = async (req, res) => {
   try {
     const { status, currentStep, facility, limit = 50, offset = 0 } = req.query;
@@ -206,6 +226,16 @@ export const getGrievances = async (req, res) => {
   }
 };
 
+/**
+ * Get detailed information about a specific grievance
+ * Includes timeline, deadlines, documents, and notes
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.id - Grievance ID
+ * @param {Object} req.user - Authenticated user
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with complete grievance details
+ */
 export const getGrievanceById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -289,6 +319,18 @@ export const getGrievanceById = async (req, res) => {
   }
 };
 
+/**
+ * Update the current step of a grievance
+ * Creates a new timeline entry
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.id - Grievance ID
+ * @param {Object} req.body - Update data
+ * @param {string} req.body.newStep - New step value
+ * @param {string} req.body.notes - Optional notes about the update
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with updated grievance
+ */
 export const updateGrievanceStep = async (req, res) => {
   const client = await pool.connect();
 
@@ -334,6 +376,17 @@ export const updateGrievanceStep = async (req, res) => {
   }
 };
 
+/**
+ * Add a note to a grievance
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.id - Grievance ID
+ * @param {Object} req.body - Note data
+ * @param {string} req.body.noteText - The note content
+ * @param {boolean} req.body.isInternal - Whether note is internal (stewards only)
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with created note
+ */
 export const addNote = async (req, res) => {
   try {
     const { id } = req.params;
@@ -356,6 +409,14 @@ export const addNote = async (req, res) => {
   }
 };
 
+/**
+ * Get grievance statistics for the authenticated user
+ * Returns counts by status, step, and pending deadlines
+ * @param {Object} req - Express request object
+ * @param {Object} req.user - Authenticated user
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns JSON with statistics
+ */
 export const getStatistics = async (req, res) => {
   try {
     // Get various statistics

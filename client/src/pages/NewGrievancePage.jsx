@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, AlertCircle, Plus, X, FileText } from 'lucide-react';
 import api from '../services/api';
+import { getCraftsGrouped } from '../utils/unionConfig';
 
 const NewGrievancePage = () => {
   const navigate = useNavigate();
@@ -61,14 +62,6 @@ const NewGrievancePage = () => {
     'Safety Hazard',
     'Wrongful Termination',
     'Contract Violation - Other'
-  ];
-
-  const crafts = [
-    'carrier',
-    'clerk',
-    'maintenance',
-    'motor_vehicle',
-    'mail_handler'
   ];
 
   useEffect(() => {
@@ -327,13 +320,15 @@ const NewGrievancePage = () => {
                     onChange={handleChange}
                     className={`input-field ${errors.craft ? 'border-red-500' : ''}`}
                   >
-                    <option value="">Select Craft</option>
-                    {crafts.map(craft => (
-                      <option key={craft} value={craft}>
-                        {craft.split('_').map(word =>
-                          word.charAt(0).toUpperCase() + word.slice(1)
-                        ).join(' ')}
-                      </option>
+                    <option value="">Select Union & Position</option>
+                    {getCraftsGrouped().map(group => (
+                      <optgroup key={group.union} label={group.label}>
+                        {group.crafts.map(craft => (
+                          <option key={craft.value} value={craft.value}>
+                            {craft.label}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                   {errors.craft && (
