@@ -1,9 +1,22 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { validationResult } from 'express-validator';
 import pool from '../config/database.js';
+import { getUnionFromCraft } from '../utils/unionConfig.js';
 
 export const register = async (req, res) => {
   try {
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: {
+          message: errors.array()[0].msg,
+          details: errors.array()
+        }
+      });
+    }
+
     const {
       email,
       password,
@@ -16,10 +29,13 @@ export const register = async (req, res) => {
       phone
     } = req.body;
 
+    // Handle empty employee_id as NULL to avoid unique constraint issues
+    const employeeIdValue = employeeId && employeeId.trim() !== '' ? employeeId : null;
+
     // Check if user already exists
     const userExists = await pool.query(
-      'SELECT id FROM users WHERE email = $1 OR employee_id = $2',
-      [email, employeeId]
+      'SELECT id FROM users WHERE email = $1 OR (employee_id = $2 AND $2 IS NOT NULL)',
+      [email, employeeIdValue]
     );
 
     if (userExists.rows.length > 0) {
@@ -31,13 +47,16 @@ export const register = async (req, res) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // Auto-determine union_type from craft
+    const unionType = getUnionFromCraft(craft);
+
     // Insert new user
     const result = await pool.query(
       `INSERT INTO users
-        (email, password_hash, first_name, last_name, employee_id, role, facility, craft, phone)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, email, first_name, last_name, employee_id, role, facility, craft, phone, created_at`,
-      [email, passwordHash, firstName, lastName, employeeId, role, facility, craft, phone]
+        (email, password_hash, first_name, last_name, employee_id, role, facility, craft, union_type, phone)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id, email, first_name, last_name, employee_id, role, facility, craft, union_type, phone, created_at`,
+      [email, passwordHash, firstName, lastName, employeeIdValue, role, facility, craft, unionType, phone]
     );
 
     const user = result.rows[0];
@@ -65,6 +84,7 @@ export const register = async (req, res) => {
         role: user.role,
         facility: user.facility,
         craft: user.craft,
+        unionType: user.union_type,
         phone: user.phone
       }
     });
@@ -76,12 +96,23 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: {
+          message: errors.array()[0].msg,
+          details: errors.array()
+        }
+      });
+    }
+
     const { email, password } = req.body;
 
     // Find user by email
     const result = await pool.query(
       `SELECT id, email, password_hash, first_name, last_name, employee_id,
-              role, facility, craft, phone
+              role, facility, craft, union_type, phone
        FROM users WHERE email = $1`,
       [email]
     );
@@ -126,6 +157,7 @@ export const login = async (req, res) => {
         role: user.role,
         facility: user.facility,
         craft: user.craft,
+        unionType: user.union_type,
         phone: user.phone
       }
     });
@@ -139,7 +171,7 @@ export const getProfile = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, email, first_name, last_name, employee_id,
-              role, facility, craft, phone, created_at
+              role, facility, craft, union_type, phone, created_at
        FROM users WHERE id = $1`,
       [req.user.userId]
     );
@@ -159,6 +191,7 @@ export const getProfile = async (req, res) => {
       role: user.role,
       facility: user.facility,
       craft: user.craft,
+      unionType: user.union_type,
       phone: user.phone,
       createdAt: user.created_at
     });
