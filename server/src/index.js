@@ -10,8 +10,20 @@ import { initializeScheduler } from './services/notificationScheduler.js';
 
 dotenv.config();
 
+// Validate critical environment variables in production
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.DATABASE_URL) {
+    console.error('FATAL ERROR: DATABASE_URL environment variable is not set in production!');
+    console.error('Please configure your PostgreSQL database in Railway dashboard.');
+    process.exit(1);
+  }
+}
+
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+// Trust proxy - required for Railway deployment
+app.set('trust proxy', true);
 
 // CORS configuration with environment variable support
 const allowedOrigins = process.env.CLIENT_URL
