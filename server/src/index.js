@@ -30,6 +30,9 @@ const allowedOrigins = process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(',').map(url => url.trim())
   : ['http://localhost:5173'];
 
+console.log('CLIENT_URL from env:', process.env.CLIENT_URL);
+console.log('Allowed origins:', allowedOrigins);
+
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
