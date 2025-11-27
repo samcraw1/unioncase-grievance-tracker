@@ -23,6 +23,18 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
+
+    // Handle trial expiration (403 with specific error code)
+    if (error.response?.status === 403) {
+      const errorCode = error.response?.data?.error?.code;
+
+      if (errorCode === 'TRIAL_EXPIRED' || errorCode === 'SUBSCRIPTION_INACTIVE') {
+        // Redirect to trial expired page
+        window.location.href = '/trial-expired';
+        return Promise.reject(error);
+      }
+    }
+
     return Promise.reject(error);
   }
 );

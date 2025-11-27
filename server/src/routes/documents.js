@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { authenticate } from '../middleware/auth.js';
+import { requireActiveSubscription } from '../middleware/subscription.js';
 import pool from '../config/database.js';
 
 const router = express.Router();
@@ -36,6 +37,7 @@ const upload = multer({
 });
 
 router.use(authenticate);
+router.use(requireActiveSubscription);
 
 // Upload document to a grievance
 router.post('/:grievanceId', upload.single('file'), async (req, res) => {

@@ -66,16 +66,60 @@ export const register = async (req, res) => {
     // Auto-determine union_type from craft
     const unionType = getUnionFromCraft(craft);
 
-    // Insert new user
+    // Check if this facility should be enrolled in trial
+    const shouldEnrollInTrial = (facility) => {
+      const trialFacilities = process.env.TRIAL_ENABLED_FACILITIES || '*';
+
+      // If wildcard, all new users get trial
+      if (trialFacilities === '*') return true;
+
+      // If empty, no trials
+      if (!trialFacilities || trialFacilities.trim() === '') return false;
+
+      // Check if facility is in enabled list (case-insensitive)
+      const enabledList = trialFacilities.split(',').map(f => f.trim().toLowerCase());
+      return enabledList.includes((facility || '').toLowerCase());
+    };
+
+    // Calculate trial dates or set to active
+    let trialStartsAt = null;
+    let trialEndsAt = null;
+    let subscriptionStatus = 'active';
+
+    if (shouldEnrollInTrial(facility)) {
+      // Enroll in trial
+      const now = new Date();
+      trialStartsAt = now;
+      trialEndsAt = new Date(now);
+      trialEndsAt.setDate(trialEndsAt.getDate() + 30); // 30 days from now
+      subscriptionStatus = 'trial';
+    }
+
+    // Insert new user with trial information
     const result = await pool.query(
       `INSERT INTO users
-        (email, password_hash, first_name, last_name, employee_id, role, facility, craft, union_type, phone)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id, email, first_name, last_name, employee_id, role, facility, craft, union_type, phone, created_at`,
-      [email, passwordHash, firstName, lastName, employeeIdValue, role, facility, craft, unionType, phone]
+        (email, password_hash, first_name, last_name, employee_id, role, facility, craft, union_type, phone,
+         trial_starts_at, trial_ends_at, subscription_status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       RETURNING id, email, first_name, last_name, employee_id, role, facility, craft, union_type, phone, created_at,
+                 trial_starts_at, trial_ends_at, subscription_status`,
+      [email, passwordHash, firstName, lastName, employeeIdValue, role, facility, craft, unionType, phone,
+       trialStartsAt, trialEndsAt, subscriptionStatus]
     );
 
     const user = result.rows[0];
+
+    // Send welcome email if user is on trial
+    if (user.subscription_status === 'trial') {
+      try {
+        // Dynamic import to avoid circular dependency
+        const { sendTrialWelcomeEmail } = await import('../services/emailService.js');
+        await sendTrialWelcomeEmail(user);
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't fail registration if email fails
+      }
+    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -101,7 +145,10 @@ export const register = async (req, res) => {
         facility: user.facility,
         craft: user.craft,
         unionType: user.union_type,
-        phone: user.phone
+        phone: user.phone,
+        subscriptionStatus: user.subscription_status,
+        trialStartsAt: user.trial_starts_at,
+        trialEndsAt: user.trial_ends_at
       }
     });
   } catch (error) {
@@ -134,10 +181,11 @@ export const login = async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Find user by email
+    // Find user by email - Include subscription fields
     const result = await pool.query(
       `SELECT id, email, password_hash, first_name, last_name, employee_id,
-              role, facility, craft, union_type, phone
+              role, facility, craft, union_type, phone,
+              subscription_status, trial_starts_at, trial_ends_at
        FROM users WHERE email = $1`,
       [email]
     );
@@ -157,6 +205,21 @@ export const login = async (req, res) => {
       return res.status(401).json({
         error: { message: 'Invalid email or password' }
       });
+    }
+
+    // Check if trial has expired and update status
+    if (user.subscription_status === 'trial' && user.trial_ends_at) {
+      const now = new Date();
+      const trialEnd = new Date(user.trial_ends_at);
+
+      if (now > trialEnd) {
+        // Update user status to expired
+        await pool.query(
+          'UPDATE users SET subscription_status = $1 WHERE id = $2',
+          ['expired', user.id]
+        );
+        user.subscription_status = 'expired';
+      }
     }
 
     // Generate JWT token
@@ -183,7 +246,10 @@ export const login = async (req, res) => {
         facility: user.facility,
         craft: user.craft,
         unionType: user.union_type,
-        phone: user.phone
+        phone: user.phone,
+        subscriptionStatus: user.subscription_status,
+        trialStartsAt: user.trial_starts_at,
+        trialEndsAt: user.trial_ends_at
       }
     });
   } catch (error) {
@@ -204,7 +270,8 @@ export const getProfile = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, email, first_name, last_name, employee_id,
-              role, facility, craft, union_type, phone, created_at
+              role, facility, craft, union_type, phone, created_at,
+              subscription_status, trial_starts_at, trial_ends_at
        FROM users WHERE id = $1`,
       [req.user.userId]
     );
@@ -214,6 +281,20 @@ export const getProfile = async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    // Check and update trial expiration
+    if (user.subscription_status === 'trial' && user.trial_ends_at) {
+      const now = new Date();
+      const trialEnd = new Date(user.trial_ends_at);
+
+      if (now > trialEnd) {
+        await pool.query(
+          'UPDATE users SET subscription_status = $1 WHERE id = $2',
+          ['expired', user.id]
+        );
+        user.subscription_status = 'expired';
+      }
+    }
 
     res.json({
       id: user.id,
@@ -226,7 +307,10 @@ export const getProfile = async (req, res) => {
       craft: user.craft,
       unionType: user.union_type,
       phone: user.phone,
-      createdAt: user.created_at
+      createdAt: user.created_at,
+      subscriptionStatus: user.subscription_status,
+      trialStartsAt: user.trial_starts_at,
+      trialEndsAt: user.trial_ends_at
     });
   } catch (error) {
     console.error('Get profile error:', error);

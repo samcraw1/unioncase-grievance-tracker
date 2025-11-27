@@ -393,11 +393,224 @@ export const sendGrievanceResolvedNotification = async (user, grievance, resolut
   }
 };
 
+// Trial Welcome Email
+export const sendTrialWelcomeEmail = async (user) => {
+  const trialEndDate = new Date(user.trial_ends_at);
+
+  const content = `
+    <h2 style="color: #003366; margin: 0 0 20px 0;">Welcome to UnionCase!</h2>
+    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Hello ${user.first_name},
+    </p>
+    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Thank you for registering with UnionCase, the comprehensive grievance tracking system for letter carriers.
+    </p>
+
+    <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #155724; font-weight: bold;">Your 30-Day Free Trial</p>
+      <p style="margin: 5px 0; color: #155724;">
+        <strong>Trial Ends:</strong> ${trialEndDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+      </p>
+      <p style="margin: 5px 0; color: #155724;">
+        You have <strong>30 days</strong> to explore all features at no cost.
+      </p>
+    </div>
+
+    <div style="background-color: #f8f9fa; border-left: 4px solid #003366; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #333; font-weight: bold;">What You Can Do:</p>
+      <ul style="margin: 10px 0; padding-left: 20px; color: #666;">
+        <li style="margin: 5px 0;">File and track grievances</li>
+        <li style="margin: 5px 0;">Set deadlines and receive automated reminders</li>
+        <li style="margin: 5px 0;">Upload and organize documents</li>
+        <li style="margin: 5px 0;">Collaborate with stewards and representatives</li>
+        <li style="margin: 5px 0;">Generate PDF reports</li>
+      </ul>
+    </div>
+
+    <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+      We'll send you reminders as your trial period approaches its end. If you have any questions,
+      reply to this email or contact us at ${process.env.SUPPORT_EMAIL || 'samcraw01@gmail.com'}.
+    </p>
+  `;
+
+  const mailOptions = {
+    from: `"UnionCase" <${process.env.SMTP_FROM || 'noreply@uspsgrievances.com'}>`,
+    to: user.email,
+    subject: 'Welcome to UnionCase - Your 30-Day Trial Starts Now',
+    html: emailTemplate(content, null)
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Trial welcome email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Error sending trial welcome email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Trial 7-Day Warning Email
+export const sendTrialSevenDayWarning = async (user) => {
+  const trialEndDate = new Date(user.trial_ends_at);
+
+  const content = `
+    <h2 style="color: #ffc107; margin: 0 0 20px 0;">Your Trial Ends in 7 Days</h2>
+    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Hello ${user.first_name},
+    </p>
+    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Your 30-day free trial of UnionCase will end in <strong>7 days</strong> on
+      ${trialEndDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+    </p>
+
+    <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #856404; font-weight: bold;">Continue Using UnionCase</p>
+      <p style="margin: 5px 0; color: #856404;">
+        To maintain uninterrupted access to your grievance data and all features, please contact us to activate your subscription.
+      </p>
+    </div>
+
+    <div style="background-color: #f8f9fa; border-left: 4px solid #003366; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #333; font-weight: bold;">Contact Information:</p>
+      <p style="margin: 5px 0; color: #666;"><strong>Email:</strong> ${process.env.SUPPORT_EMAIL || 'samcraw01@gmail.com'}</p>
+      <p style="margin: 5px 0; color: #666;"><strong>Phone:</strong> ${process.env.SUPPORT_PHONE || '501-580-6175'}</p>
+    </div>
+
+    <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+      Don't lose access to your important grievance records. Reach out today!
+    </p>
+  `;
+
+  const mailOptions = {
+    from: `"UnionCase" <${process.env.SMTP_FROM || 'noreply@uspsgrievances.com'}>`,
+    to: user.email,
+    subject: 'Trial Ending Soon - 7 Days Remaining',
+    html: emailTemplate(content, null)
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('7-day trial warning sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Error sending 7-day trial warning:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Trial 2-Day Warning Email
+export const sendTrialTwoDayWarning = async (user) => {
+  const trialEndDate = new Date(user.trial_ends_at);
+
+  const content = `
+    <h2 style="color: #dc3545; margin: 0 0 20px 0;">Final Reminder - Trial Ends in 2 Days</h2>
+    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Hello ${user.first_name},
+    </p>
+    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      <strong>This is your final reminder.</strong> Your UnionCase trial will end in just <strong>2 days</strong> on
+      ${trialEndDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+    </p>
+
+    <div style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #721c24; font-weight: bold;">Action Required</p>
+      <p style="margin: 5px 0; color: #721c24;">
+        After your trial ends, you will lose access to your account until you activate a subscription.
+      </p>
+    </div>
+
+    <div style="background-color: #f8f9fa; border-left: 4px solid #003366; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #333; font-weight: bold;">Contact Us Immediately:</p>
+      <p style="margin: 5px 0; color: #666;"><strong>Email:</strong> ${process.env.SUPPORT_EMAIL || 'samcraw01@gmail.com'}</p>
+      <p style="margin: 5px 0; color: #666;"><strong>Phone:</strong> ${process.env.SUPPORT_PHONE || '501-580-6175'}</p>
+    </div>
+
+    <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+      Don't wait until it's too late. Contact us today to keep your grievance tracking active.
+    </p>
+  `;
+
+  const mailOptions = {
+    from: `"UnionCase" <${process.env.SMTP_FROM || 'noreply@uspsgrievances.com'}>`,
+    to: user.email,
+    subject: 'URGENT: Trial Ends in 2 Days - Action Required',
+    html: emailTemplate(content, null)
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('2-day trial warning sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Error sending 2-day trial warning:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Trial Expired Email
+export const sendTrialExpiredEmail = async (user) => {
+  const content = `
+    <h2 style="color: #dc3545; margin: 0 0 20px 0;">Your Trial Has Expired</h2>
+    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Hello ${user.first_name},
+    </p>
+    <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+      Your 30-day free trial of UnionCase has ended. Your account has been temporarily suspended.
+    </p>
+
+    <div style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #721c24; font-weight: bold;">Account Status: Suspended</p>
+      <p style="margin: 5px 0; color: #721c24;">
+        You will not be able to access your grievance data until you activate a paid subscription.
+      </p>
+    </div>
+
+    <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #155724; font-weight: bold;">Your Data is Safe</p>
+      <p style="margin: 5px 0; color: #155724;">
+        All your grievance records, documents, and notes are securely stored. Once you activate a subscription,
+        you'll have immediate access to everything.
+      </p>
+    </div>
+
+    <div style="background-color: #f8f9fa; border-left: 4px solid #003366; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0; color: #333; font-weight: bold;">Activate Your Subscription:</p>
+      <p style="margin: 5px 0; color: #666;"><strong>Email:</strong> ${process.env.SUPPORT_EMAIL || 'samcraw01@gmail.com'}</p>
+      <p style="margin: 5px 0; color: #666;"><strong>Phone:</strong> ${process.env.SUPPORT_PHONE || '501-580-6175'}</p>
+    </div>
+
+    <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+      We look forward to continuing to serve your grievance tracking needs.
+    </p>
+  `;
+
+  const mailOptions = {
+    from: `"UnionCase" <${process.env.SMTP_FROM || 'noreply@uspsgrievances.com'}>`,
+    to: user.email,
+    subject: 'Your UnionCase Trial Has Expired',
+    html: emailTemplate(content, null)
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Trial expired email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('Error sending trial expired email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 export default {
   sendNewGrievanceNotification,
   sendDeadlineReminderNotification,
   sendDeadlineOverdueNotification,
   sendStatusUpdateNotification,
   sendNewNoteNotification,
-  sendGrievanceResolvedNotification
+  sendGrievanceResolvedNotification,
+  sendTrialWelcomeEmail,
+  sendTrialSevenDayWarning,
+  sendTrialTwoDayWarning,
+  sendTrialExpiredEmail
 };

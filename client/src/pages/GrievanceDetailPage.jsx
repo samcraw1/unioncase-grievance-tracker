@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, Clock, User, FileText, Building,
   Briefcase, Users, AlertCircle, CheckCircle, MessageSquare,
-  Paperclip, Plus, Send, Upload, X, Download, Trash2, Image as ImageIcon, Camera
+  Paperclip, Plus, Send, Upload, X, Download, Trash2, Image as ImageIcon, Camera,
+  ChevronRight, ArrowRightCircle
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { format, formatDistanceToNow } from 'date-fns';
 import imageCompression from 'browser-image-compression';
@@ -12,6 +14,7 @@ import imageCompression from 'browser-image-compression';
 const GrievanceDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
@@ -29,6 +32,12 @@ const GrievanceDetailPage = () => {
   const [fileLabel, setFileLabel] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [exportingPDF, setExportingPDF] = useState(false);
+
+  // Step update states
+  const [showStepModal, setShowStepModal] = useState(false);
+  const [updatingStep, setUpdatingStep] = useState(false);
+  const [stepNotes, setStepNotes] = useState('');
+  const [selectedStep, setSelectedStep] = useState('');
 
   useEffect(() => {
     fetchGrievanceDetail();
@@ -259,6 +268,45 @@ const GrievanceDetailPage = () => {
     return steps.indexOf(step);
   };
 
+  const getNextSteps = (currentStep) => {
+    const allSteps = [
+      { key: 'informal_step_a', label: 'Informal Step A' },
+      { key: 'formal_step_a', label: 'Formal Step A' },
+      { key: 'step_b', label: 'Step B' },
+      { key: 'arbitration', label: 'Arbitration' },
+      { key: 'resolved', label: 'Resolved' },
+      { key: 'settled', label: 'Settled' },
+      { key: 'denied', label: 'Denied' },
+      { key: 'withdrawn', label: 'Withdrawn' }
+    ];
+    const currentIndex = allSteps.findIndex(s => s.key === currentStep);
+    // Return steps after current, plus final statuses
+    return allSteps.filter((s, i) => i > currentIndex || ['resolved', 'settled', 'denied', 'withdrawn'].includes(s.key));
+  };
+
+  const handleUpdateStep = async () => {
+    if (!selectedStep) return;
+
+    try {
+      setUpdatingStep(true);
+      await api.patch(`/grievances/${id}/step`, {
+        newStep: selectedStep,
+        notes: stepNotes
+      });
+      setShowStepModal(false);
+      setSelectedStep('');
+      setStepNotes('');
+      await fetchGrievanceDetail();
+    } catch (err) {
+      console.error('Error updating step:', err);
+      alert('Failed to update step. Please try again.');
+    } finally {
+      setUpdatingStep(false);
+    }
+  };
+
+  const canUpdateStep = user && (user.role === 'steward' || user.role === 'representative');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -484,15 +532,27 @@ const GrievanceDetailPage = () => {
             {/* Documents */}
             <div className="card">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-900">Documents</h2>
+                <h2 className="text-xl font-bold text-gray-900">Documents & Photos</h2>
                 {!showUploadForm && (
-                  <button
-                    onClick={() => setShowUploadForm(true)}
-                    className="btn-primary flex items-center space-x-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span>Upload</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setShowUploadForm(true);
+                        setTimeout(() => cameraInputRef.current?.click(), 100);
+                      }}
+                      className="btn-secondary flex items-center space-x-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      <span className="hidden sm:inline">Take Photo</span>
+                    </button>
+                    <button
+                      onClick={() => setShowUploadForm(true)}
+                      className="btn-primary flex items-center space-x-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>Upload</span>
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -563,7 +623,7 @@ const GrievanceDetailPage = () => {
                       <button
                         type="button"
                         onClick={() => cameraInputRef.current?.click()}
-                        className="btn-secondary flex items-center justify-center space-x-2 md:hidden"
+                        className="btn-secondary flex items-center justify-center space-x-2"
                       >
                         <Camera className="h-4 w-4" />
                         <span>Take Photo</span>
@@ -698,14 +758,27 @@ const GrievanceDetailPage = () => {
               ) : (
                 <div className="text-center py-8">
                   <Paperclip className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm mb-4">No documents uploaded yet</p>
+                  <p className="text-gray-500 text-sm mb-4">No documents or photos uploaded yet</p>
                   {!showUploadForm && (
-                    <button
-                      onClick={() => setShowUploadForm(true)}
-                      className="btn-primary"
-                    >
-                      Upload First Document
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => {
+                          setShowUploadForm(true);
+                          setTimeout(() => cameraInputRef.current?.click(), 100);
+                        }}
+                        className="btn-secondary flex items-center justify-center space-x-2"
+                      >
+                        <Camera className="h-4 w-4" />
+                        <span>Take Photo</span>
+                      </button>
+                      <button
+                        onClick={() => setShowUploadForm(true)}
+                        className="btn-primary flex items-center justify-center space-x-2"
+                      >
+                        <Upload className="h-4 w-4" />
+                        <span>Upload File</span>
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -811,8 +884,86 @@ const GrievanceDetailPage = () => {
                     </span>
                   </div>
                 </div>
+                {/* Update Step Button - Only for Stewards/Reps */}
+                {canUpdateStep && grievance.status === 'active' && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <button
+                      onClick={() => setShowStepModal(true)}
+                      className="w-full btn-primary flex items-center justify-center space-x-2"
+                    >
+                      <ArrowRightCircle className="h-4 w-4" />
+                      <span>Update Step</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Step Update Modal */}
+            {showStepModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Update Grievance Step</h3>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Current Step: <span className="font-bold">{formatStatus(grievance.current_step)}</span>
+                    </label>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Move to Step
+                    </label>
+                    <select
+                      value={selectedStep}
+                      onChange={(e) => setSelectedStep(e.target.value)}
+                      className="input-field"
+                    >
+                      <option value="">Select new step...</option>
+                      {getNextSteps(grievance.current_step).map((step) => (
+                        <option key={step.key} value={step.key}>
+                          {step.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes (optional)
+                    </label>
+                    <textarea
+                      value={stepNotes}
+                      onChange={(e) => setStepNotes(e.target.value)}
+                      placeholder="Add notes about this step change..."
+                      rows={3}
+                      className="input-field"
+                    />
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleUpdateStep}
+                      disabled={!selectedStep || updatingStep}
+                      className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updatingStep ? 'Updating...' : 'Update Step'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowStepModal(false);
+                        setSelectedStep('');
+                        setStepNotes('');
+                      }}
+                      className="flex-1 btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Deadlines */}
             {grievance.deadlines && grievance.deadlines.length > 0 && (

@@ -7,10 +7,12 @@ import NewGrievancePage from './pages/NewGrievancePage';
 import GrievanceDetailPage from './pages/GrievanceDetailPage';
 import SettingsPage from './pages/SettingsPage';
 import ResourcesPage from './pages/ResourcesPage';
+import TrialExpiredPage from './pages/TrialExpiredPage';
 import InstallPrompt from './components/InstallPrompt';
 import IOSInstallModal from './components/IOSInstallModal';
 import MobileNav from './components/MobileNav';
 import DesktopSidebar from './components/DesktopSidebar';
+import TrialBanner from './components/TrialBanner';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -68,6 +70,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/trial-expired"
+        element={
+          <ProtectedRoute>
+            <TrialExpiredPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
@@ -118,6 +128,7 @@ function App() {
 
   return (
     <>
+      {isAuthenticated && <TrialBanner />}
       {isAuthenticated && <DesktopSidebar />}
       <div className={isAuthenticated ? 'md:ml-64' : ''}>
         <AppRoutes />

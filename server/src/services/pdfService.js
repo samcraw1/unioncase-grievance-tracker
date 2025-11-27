@@ -46,6 +46,7 @@ export const generateGrievancePDF = (grievance, stream) => {
       // Create PDF document
       const doc = new PDFDocument({
         size: 'LETTER',
+        bufferPages: true,
         margins: {
           top: 50,
           bottom: 50,

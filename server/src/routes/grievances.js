@@ -9,13 +9,15 @@ import {
   getStatistics
 } from '../controllers/grievanceController.js';
 import { authenticate } from '../middleware/auth.js';
+import { requireActiveSubscription } from '../middleware/subscription.js';
 import { generateGrievancePDF } from '../services/pdfService.js';
 import pool from '../config/database.js';
 
 const router = express.Router();
 
-// All routes require authentication
+// All routes require authentication AND active subscription
 router.use(authenticate);
+router.use(requireActiveSubscription);
 
 // Validation
 const grievanceValidation = [
@@ -69,7 +71,7 @@ router.get('/:id/export-pdf', async (req, res) => {
     const notesResult = await pool.query(
       `SELECT n.*, u.first_name || ' ' || u.last_name as author_name
        FROM notes n
-       LEFT JOIN users u ON n.author_id = u.id
+       LEFT JOIN users u ON n.user_id = u.id
        WHERE n.grievance_id = $1
        ORDER BY n.created_at ASC`,
       [id]

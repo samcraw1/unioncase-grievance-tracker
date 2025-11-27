@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -24,6 +25,13 @@ export const AuthProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data);
+
+      // Set subscription info from profile
+      setSubscriptionStatus({
+        status: response.data.subscriptionStatus,
+        trialStartsAt: response.data.trialStartsAt,
+        trialEndsAt: response.data.trialEndsAt
+      });
     } catch (error) {
       console.error('Failed to fetch profile:', error);
       logout();
@@ -44,6 +52,13 @@ export const AuthProvider = ({ children }) => {
       setToken(newToken);
       setUser(userData);
 
+      // Set subscription info from login response
+      setSubscriptionStatus({
+        status: userData.subscriptionStatus,
+        trialStartsAt: userData.trialStartsAt,
+        trialEndsAt: userData.trialEndsAt
+      });
+
       return { success: true };
     } catch (error) {
       return {
@@ -62,6 +77,13 @@ export const AuthProvider = ({ children }) => {
       setToken(newToken);
       setUser(newUser);
 
+      // Set subscription info from register response
+      setSubscriptionStatus({
+        status: newUser.subscriptionStatus,
+        trialStartsAt: newUser.trialStartsAt,
+        trialEndsAt: newUser.trialEndsAt
+      });
+
       return { success: true };
     } catch (error) {
       return {
@@ -75,6 +97,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    setSubscriptionStatus(null);
   };
 
   const value = {
@@ -84,7 +107,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    subscriptionStatus
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

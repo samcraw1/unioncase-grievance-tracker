@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grievance Tracker - Quick Start Guide</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      max-width: 8.5in;
+      margin: 0 auto;
+      padding: 0.5in;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #1e40af;
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      color: #1e40af;
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+    .url-box {
+      background: #1e40af;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .url-box p {
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+    .url-box .url {
+      font-size: 18px;
+      font-weight: bold;
+      font-family: monospace;
+    }
+    .two-column {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .column {
+      flex: 1;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .section h2 {
+      color: #1e40af;
+      font-size: 16px;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+    .steps {
+      counter-reset: step;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .step-number {
+      background: #1e40af;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .step-content {
+      font-size: 13px;
+    }
+    .step-content strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+    .info-box {
+      background: #f0f9ff;
+      border-left: 4px solid #1e40af;
+      padding: 10px;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .warning-box {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 10px;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+    }
+    .feature:before {
+      content: "✓";
+      color: #16a34a;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    .credentials-box {
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    .credentials-box table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .credentials-box th, .credentials-box td {
+      text-align: left;
+      padding: 4px 8px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .credentials-box th {
+      font-weight: 600;
+    }
+    .footer {
+      border-top: 2px solid #e5e7eb;
+      padding-top: 15px;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #666;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .contact h3 {
+      color: #1a1a1a;
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    @media print {
+      body { padding: 0.25in; }
+      .url-box { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .step-number { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Grievance Tracker</h1>
+    <p>Quick Start Guide for NALC/NRLCA Members</p>
+  </div>
+
+  <div class="url-box">
+    <p>Access the app at:</p>
+    <div class="url">[YOUR APP URL HERE]</div>
+  </div>
+
+  <div class="two-column">
+    <div class="column">
+      <div class="section">
+        <h2>Install on Your Phone</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <strong>iPhone (Safari)</strong>
+              Open app in Safari → Tap Share button → "Add to Home Screen"
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <strong>Android (Chrome)</strong>
+              Open app in Chrome → Tap ⋮ menu → "Add to Home Screen"
+            </div>
+          </div>
+        </div>
+        <div class="info-box">
+          The app will appear on your home screen like a regular app!
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Create Your Account</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">Click "Register" on the login page</div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">Enter your email and create a password</div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">Select your role: Employee, Steward, or Representative</div>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">Enter your facility and craft</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>File a Grievance</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">Click "File New Grievance" on dashboard</div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">Fill in incident details (date, time, location)</div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">Select the contract article violated</div>
+          </div>
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">Describe what happened</div>
+          </div>
+          <div class="step">
+            <div class="step-number">5</div>
+            <div class="step-content">Submit - you'll get a grievance number</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="column">
+      <div class="section">
+        <h2>Upload Evidence</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">Open any grievance</div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">Scroll to "Documents & Photos"</div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <strong>Take Photo</strong> - Opens camera directly<br>
+              <strong>Upload</strong> - Select files from your device
+            </div>
+          </div>
+        </div>
+        <div class="info-box">
+          Accepted files: PDF, JPG, PNG (max 10MB). Photos are automatically compressed.
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Key Features</h2>
+        <div class="features">
+          <div class="feature">Track all your grievances</div>
+          <div class="feature">Automatic deadline alerts</div>
+          <div class="feature">Upload photos & documents</div>
+          <div class="feature">Export to PDF</div>
+          <div class="feature">Works on any device</div>
+          <div class="feature">Secure & private</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Who Sees What?</h2>
+        <div class="credentials-box">
+          <table>
+            <tr>
+              <th>Role</th>
+              <th>Can See</th>
+            </tr>
+            <tr>
+              <td>Employee</td>
+              <td>Only your own grievances</td>
+            </tr>
+            <tr>
+              <td>Steward</td>
+              <td>Your grievances + assigned cases</td>
+            </tr>
+            <tr>
+              <td>Representative</td>
+              <td>All grievances</td>
+            </tr>
+          </table>
+        </div>
+        <div class="warning-box">
+          <strong>Management cannot access this app.</strong> Your grievance data is private and secure.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-grid">
+      <div class="contact">
+        <h3>Questions or Issues?</h3>
+        <p>Contact: _______________________</p>
+        <p>Phone: _______________________</p>
+        <p>Email: _______________________</p>
+      </div>
+      <div class="contact">
+        <h3>Grievance Steps</h3>
+        <p>Filed → Informal Step A → Formal Step A → Step B → Arbitration → Resolved</p>
+        <p style="margin-top: 8px; font-style: italic;">Deadlines are tracked automatically!</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -2,7 +2,10 @@ import cron from 'node-cron';
 import pool from '../config/database.js';
 import {
   sendDeadlineReminderNotification,
-  sendDeadlineOverdueNotification
+  sendDeadlineOverdueNotification,
+  sendTrialSevenDayWarning,
+  sendTrialTwoDayWarning,
+  sendTrialExpiredEmail
 } from './emailService.js';
 
 // Track which notifications have been sent to avoid duplicates
@@ -159,6 +162,117 @@ const checkDeadlines = async () => {
   }
 };
 
+// Check trial expirations and send reminders
+const checkTrialExpirations = async () => {
+  console.log(`[${new Date().toISOString()}] Running trial expiration check...`);
+
+  try {
+    const now = new Date();
+
+    // Get all users on trial
+    const result = await pool.query(
+      `SELECT id, email, first_name, last_name, trial_ends_at, subscription_status
+       FROM users
+       WHERE subscription_status = 'trial'
+         AND trial_ends_at IS NOT NULL
+       ORDER BY trial_ends_at ASC`,
+      []
+    );
+
+    const trialUsers = result.rows;
+    console.log(`Found ${trialUsers.length} users on trial`);
+
+    for (const user of trialUsers) {
+      const trialEndDate = new Date(user.trial_ends_at);
+      const daysUntilExpiration = Math.ceil((trialEndDate - now) / (1000 * 60 * 60 * 24));
+
+      console.log(`User ${user.email}: ${daysUntilExpiration} days until trial expires`);
+
+      // Trial has expired - mark as expired and send email
+      if (daysUntilExpiration <= 0) {
+        const notificationKey = `trial_expired_${user.id}`;
+
+        if (!sentNotifications.has(notificationKey)) {
+          console.log(`Trial expired for user ${user.email}, updating status and sending email`);
+
+          // Update user status to expired
+          await pool.query(
+            'UPDATE users SET subscription_status = $1 WHERE id = $2',
+            ['expired', user.id]
+          );
+
+          // Send expiration email
+          await sendTrialExpiredEmail(user);
+          sentNotifications.add(notificationKey);
+
+          // Log notification in database
+          await pool.query(
+            `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+              user.id,
+              'trial_expired',
+              'Trial Expired',
+              'Your 30-day trial has expired. Contact us to activate your subscription.',
+              false
+            ]
+          );
+        }
+      }
+      // 2 days until expiration - send final warning
+      else if (daysUntilExpiration === 2) {
+        const notificationKey = `trial_2day_${user.id}`;
+
+        if (!sentNotifications.has(notificationKey)) {
+          console.log(`Sending 2-day trial warning to ${user.email}`);
+          await sendTrialTwoDayWarning(user);
+          sentNotifications.add(notificationKey);
+
+          // Log notification
+          await pool.query(
+            `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+              user.id,
+              'trial_reminder',
+              'Trial Ending Soon',
+              'Your trial ends in 2 days. Contact us to continue service.',
+              false
+            ]
+          );
+        }
+      }
+      // 7 days until expiration - send first warning
+      else if (daysUntilExpiration === 7) {
+        const notificationKey = `trial_7day_${user.id}`;
+
+        if (!sentNotifications.has(notificationKey)) {
+          console.log(`Sending 7-day trial warning to ${user.email}`);
+          await sendTrialSevenDayWarning(user);
+          sentNotifications.add(notificationKey);
+
+          // Log notification
+          await pool.query(
+            `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+              user.id,
+              'trial_reminder',
+              'Trial Ending Soon',
+              'Your trial ends in 7 days. Contact us to continue service.',
+              false
+            ]
+          );
+        }
+      }
+    }
+
+    console.log(`Trial expiration check complete`);
+  } catch (error) {
+    console.error('Error checking trial expirations:', error);
+  }
+};
+
 // Initialize cron jobs
 export const initializeScheduler = () => {
   console.log('Initializing notification scheduler...');
@@ -175,22 +289,35 @@ export const initializeScheduler = () => {
     checkDeadlines();
   });
 
+  // NEW: Trial expiration check - run daily at 9:00 AM
+  cron.schedule('0 9 * * *', () => {
+    console.log('Running daily trial expiration check (9:00 AM)...');
+    checkTrialExpirations();
+  });
+
   // For development: Run every 5 minutes
   if (process.env.NODE_ENV !== 'production') {
     cron.schedule('*/5 * * * *', () => {
       console.log('Running development deadline check (every 5 minutes)...');
       checkDeadlines();
     });
+
+    // NEW: Check trials every 10 minutes in development
+    cron.schedule('*/10 * * * *', () => {
+      console.log('Running development trial check (every 10 minutes)...');
+      checkTrialExpirations();
+    });
   }
 
   console.log('Notification scheduler initialized successfully');
-  console.log('Schedule: Daily at 8:00 AM and 12:00 PM');
+  console.log('Schedule: Deadlines at 8:00 AM and 12:00 PM, Trials at 9:00 AM');
   if (process.env.NODE_ENV !== 'production') {
-    console.log('Development mode: Also running every 5 minutes');
+    console.log('Development mode: Deadlines every 5 min, Trials every 10 min');
   }
 
   // Run immediately on startup
   setTimeout(checkDeadlines, 5000);
+  setTimeout(checkTrialExpirations, 10000); // NEW: Check trials on startup
 };
 
 export default { initializeScheduler };
