@@ -46,7 +46,7 @@ const LoginPage = () => {
             className="mx-auto h-24 w-auto mb-6"
           />
           <h1 className="text-4xl font-bold text-primary mb-2">
-            Letter Carrier Grievance Tracker
+            Letter Carrier Case Tracker
           </h1>
           <p className="text-gray-600">
             Built by a city carrier, for NALC and NRLCA stewards

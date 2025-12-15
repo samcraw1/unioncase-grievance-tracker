@@ -10,6 +10,9 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import { format, formatDistanceToNow } from 'date-fns';
 import imageCompression from 'browser-image-compression';
+import { mapCaseStage, getCaseStageBadgeClass, isArbitration, getNextStageOptions } from '../utils/caseStatus';
+import { formatCaseNumber } from '../utils/caseNumber';
+import CaseVisibilityIndicator from '../components/CaseVisibilityIndicator';
 
 const GrievanceDetailPage = () => {
   const navigate = useNavigate();
@@ -51,7 +54,7 @@ const GrievanceDetailPage = () => {
       setError('');
     } catch (err) {
       console.error('Error fetching grievance:', err);
-      setError('Failed to load grievance details. Please try again.');
+      setError('Failed to load case details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -312,7 +315,7 @@ const GrievanceDetailPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading grievance details...</p>
+          <p className="mt-4 text-gray-500">Loading case details...</p>
         </div>
       </div>
     );
@@ -332,7 +335,7 @@ const GrievanceDetailPage = () => {
           <div className="card">
             <div className="text-center py-12">
               <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-              <p className="text-gray-700 mb-4">{error || 'Grievance not found'}</p>
+              <p className="text-gray-700 mb-4">{error || 'Case not found'}</p>
               <button onClick={() => navigate('/dashboard')} className="btn-primary">
                 Return to Dashboard
               </button>
@@ -369,9 +372,12 @@ const GrievanceDetailPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {grievance.grievance_number}
+                {formatCaseNumber(grievance.grievance_number)}
               </h1>
               <p className="text-gray-600 mt-1">{grievance.violation_type}</p>
+              <div className="mt-2">
+                <CaseVisibilityIndicator grievance={grievance} />
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -382,9 +388,16 @@ const GrievanceDetailPage = () => {
                 <Download className="h-4 w-4" />
                 <span>{exportingPDF ? 'Exporting...' : 'Export PDF'}</span>
               </button>
-              <span className={`${getStatusBadgeClass(grievance.current_step)} text-lg px-4 py-2`}>
-                {formatStatus(grievance.current_step)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`${getCaseStageBadgeClass(mapCaseStage(grievance.current_step, grievance.status))} text-lg px-4 py-2 rounded-full`}>
+                  {mapCaseStage(grievance.current_step, grievance.status)}
+                </span>
+                {isArbitration(grievance.current_step) && (
+                  <span className="badge bg-red-100 text-red-700 text-sm px-3 py-1">
+                    Arbitration
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -394,7 +407,7 @@ const GrievanceDetailPage = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Timeline */}
             <div className="card">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Grievance Timeline</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Case Timeline</h2>
 
               <div className="relative">
                 {/* Timeline Line */}
@@ -903,11 +916,11 @@ const GrievanceDetailPage = () => {
             {showStepModal && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Update Grievance Step</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Update Case Status</h3>
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Current Step: <span className="font-bold">{formatStatus(grievance.current_step)}</span>
+                      Current Status: <span className="font-bold">{mapCaseStage(grievance.current_step, grievance.status)}</span>
                     </label>
                   </div>
 
@@ -920,10 +933,10 @@ const GrievanceDetailPage = () => {
                       onChange={(e) => setSelectedStep(e.target.value)}
                       className="input-field"
                     >
-                      <option value="">Select new step...</option>
-                      {getNextSteps(grievance.current_step).map((step) => (
-                        <option key={step.key} value={step.key}>
-                          {step.label}
+                      <option value="">Select new status...</option>
+                      {getNextStageOptions(grievance.current_step, grievance.status).map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
                         </option>
                       ))}
                     </select>

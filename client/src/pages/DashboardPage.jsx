@@ -5,6 +5,8 @@ import { LogOut, Plus, FileText, Clock, CheckCircle, Search, Filter, AlertCircle
 import api from '../services/api';
 import { format } from 'date-fns';
 import PullToRefresh from '../components/PullToRefresh';
+import { mapCaseStage, getCaseStageBadgeClass } from '../utils/caseStatus';
+import { formatCaseNumber } from '../utils/caseNumber';
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
@@ -37,7 +39,7 @@ const DashboardPage = () => {
       setError('');
     } catch (err) {
       console.error('Error fetching grievances:', err);
-      setError('Failed to load grievances. Please try again.');
+      setError('Failed to load cases. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -181,7 +183,7 @@ const DashboardPage = () => {
                 className="h-12 w-auto"
               />
               <div>
-                <h1 className="text-2xl font-bold">NALC Grievance Tracker</h1>
+                <h1 className="text-2xl font-bold">NALC Case Tracker</h1>
                 <p className="text-sm text-gray-200">
                   Welcome, {user?.firstName} {user?.lastName}
                 </p>
@@ -220,7 +222,7 @@ const DashboardPage = () => {
           <div className="card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Grievances</p>
+                <p className="text-sm font-medium text-gray-600">Active Cases</p>
                 <p className="text-3xl font-bold text-gray-900">{statistics.activeGrievances}</p>
               </div>
               <FileText className="h-12 w-12 text-primary opacity-20" />
@@ -250,7 +252,7 @@ const DashboardPage = () => {
           <div className="card">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Filed</p>
+                <p className="text-sm font-medium text-gray-600">Total Cases</p>
                 <p className="text-3xl font-bold text-gray-900">{statistics.totalGrievances}</p>
               </div>
               <FileText className="h-12 w-12 text-neutral opacity-20" />
@@ -266,7 +268,7 @@ const DashboardPage = () => {
               className="btn-primary flex items-center justify-center space-x-2"
             >
               <Plus className="h-5 w-5" />
-              <span>File New Grievance</span>
+              <span>Create New Case</span>
             </button>
             {selectedGrievances.length > 0 && (
               <button
@@ -290,7 +292,7 @@ const DashboardPage = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search grievances..."
+                placeholder="Search cases..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input-field pl-10 w-full sm:w-64"
@@ -327,33 +329,33 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {/* Grievances Table/Cards */}
+        {/* Cases Table/Cards */}
         <div className="card overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">
-              Grievances ({filteredGrievances.length})
+              Cases ({filteredGrievances.length})
             </h2>
           </div>
 
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-4 text-gray-500">Loading grievances...</p>
+              <p className="mt-4 text-gray-500">Loading cases...</p>
             </div>
           ) : filteredGrievances.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 mb-4">
                 {grievances.length === 0
-                  ? 'No grievances filed yet'
-                  : 'No grievances match your filters'}
+                  ? 'No cases created yet'
+                  : 'No cases match your filters'}
               </p>
               {grievances.length === 0 && (
                 <button
                   onClick={() => navigate('/grievances/new')}
                   className="btn-primary"
                 >
-                  File Your First Grievance
+                  Create Your First Case
                 </button>
               )}
             </div>
@@ -418,7 +420,7 @@ const DashboardPage = () => {
                           onClick={() => navigate(`/grievances/${grievance.id}`)}
                         >
                           <div className="text-sm font-medium text-primary">
-                            {grievance.grievance_number}
+                            {formatCaseNumber(grievance.grievance_number)}
                           </div>
                         </td>
                         <td
@@ -447,16 +449,16 @@ const DashboardPage = () => {
                           className="px-6 py-4 whitespace-nowrap cursor-pointer"
                           onClick={() => navigate(`/grievances/${grievance.id}`)}
                         >
-                          <span className={getStatusBadgeClass(grievance.current_step)}>
-                            {formatStatus(grievance.current_step)}
+                          <span className={getCaseStageBadgeClass(mapCaseStage(grievance.current_step, grievance.status))}>
+                            {mapCaseStage(grievance.current_step, grievance.status)}
                           </span>
                         </td>
                         <td
                           className="px-6 py-4 whitespace-nowrap cursor-pointer"
                           onClick={() => navigate(`/grievances/${grievance.id}`)}
                         >
-                          <span className={getStatusBadgeClass(grievance.status)}>
-                            {formatStatus(grievance.status)}
+                          <span className={getCaseStageBadgeClass(mapCaseStage(grievance.current_step, grievance.status))}>
+                            {mapCaseStage(grievance.current_step, grievance.status)}
                           </span>
                         </td>
                         <td
@@ -493,15 +495,12 @@ const DashboardPage = () => {
                             className="h-5 w-5 text-primary focus:ring-primary border-gray-300 rounded min-h-touch min-w-touch"
                           />
                           <h3 className="text-base font-semibold text-primary">
-                            {grievance.grievance_number}
+                            {formatCaseNumber(grievance.grievance_number)}
                           </h3>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          <span className={getStatusBadgeClass(grievance.current_step)}>
-                            {formatStatus(grievance.current_step)}
-                          </span>
-                          <span className={getStatusBadgeClass(grievance.status)}>
-                            {formatStatus(grievance.status)}
+                          <span className={getCaseStageBadgeClass(mapCaseStage(grievance.current_step, grievance.status))}>
+                            {mapCaseStage(grievance.current_step, grievance.status)}
                           </span>
                         </div>
                       </div>

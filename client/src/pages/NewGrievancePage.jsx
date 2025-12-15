@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, AlertCircle, Plus, X, FileText } from 'lucide-react';
 import api from '../services/api';
 import { getCraftsGrouped } from '../utils/unionConfig';
+import DisclaimerBanner from '../components/DisclaimerBanner';
 
 const NewGrievancePage = () => {
   const navigate = useNavigate();
@@ -210,10 +211,10 @@ const NewGrievancePage = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      console.error('Error creating grievance:', err);
+      console.error('Error creating case:', err);
       setSubmitError(
         err.response?.data?.error?.message ||
-        'Failed to create grievance. Please try again.'
+        'Failed to create case. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -231,14 +232,16 @@ const NewGrievancePage = () => {
           <span>Back to Dashboard</span>
         </button>
 
+        <DisclaimerBanner variant="warning" className="mb-6" />
+
         <div className="card">
           <div className="border-b border-gray-200 pb-4 mb-6">
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
               <FileText className="h-8 w-8 text-primary mr-3" />
-              File New Grievance
+              Create New Case
             </h1>
             <p className="text-sm text-gray-600 mt-2">
-              Complete all required fields to file a grievance. All information will be reviewed by your union steward.
+              Complete all fields to document your case. This case is private unless you choose to share it with a steward.
             </p>
           </div>
 
@@ -440,7 +443,7 @@ const NewGrievancePage = () => {
                   onChange={handleChange}
                   maxLength={100}
                   className={`input-field ${errors.briefDescription ? 'border-red-500' : ''}`}
-                  placeholder="Short summary of the grievance"
+                  placeholder="Short summary of the case"
                 />
                 <div className="flex justify-between items-center mt-1">
                   {errors.briefDescription ? (
@@ -463,7 +466,7 @@ const NewGrievancePage = () => {
                   onChange={handleChange}
                   rows={6}
                   className={`input-field ${errors.detailedDescription ? 'border-red-500' : ''}`}
-                  placeholder="Provide a complete description of the incident, including dates, times, locations, and any relevant details that support your grievance..."
+                  placeholder="Provide a complete description of the incident, including dates, times, locations, and any relevant details that support your case..."
                 />
                 {errors.detailedDescription && (
                   <p className="text-red-500 text-xs mt-1">{errors.detailedDescription}</p>
@@ -561,8 +564,8 @@ const NewGrievancePage = () => {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  You can assign this grievance to a specific union steward, or leave blank to assign later.
+                <p className="text-xs text-gray-600 mt-1">
+                  💡 Assigning a steward shares this case with them (read-only). Leave blank to keep private.
                 </p>
               </div>
             </div>
@@ -584,12 +587,12 @@ const NewGrievancePage = () => {
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Filing Grievance...</span>
+                    <span>Saving Case...</span>
                   </>
                 ) : (
                   <>
                     <FileText className="h-4 w-4" />
-                    <span>File Grievance</span>
+                    <span>Save Case</span>
                   </>
                 )}
               </button>

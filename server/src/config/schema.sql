@@ -174,7 +174,7 @@ CREATE TABLE public.grievances (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT grievances_craft_check CHECK (((craft)::text = ANY ((ARRAY['city_carrier'::character varying, 'cca'::character varying, 'rural_carrier'::character varying, 'rca'::character varying, 'other'::character varying])::text[]))),
-    CONSTRAINT grievances_current_step_check CHECK (((current_step)::text = ANY ((ARRAY['filed'::character varying, 'informal_step_a'::character varying, 'formal_step_a'::character varying, 'step_b'::character varying, 'arbitration'::character varying, 'resolved'::character varying, 'settled'::character varying, 'denied'::character varying])::text[]))),
+    CONSTRAINT grievances_current_step_check CHECK (((current_step)::text = ANY ((ARRAY['draft'::character varying, 'filed'::character varying, 'informal_step_a'::character varying, 'formal_step_a'::character varying, 'step_b'::character varying, 'arbitration'::character varying, 'resolved'::character varying, 'settled'::character varying, 'denied'::character varying, 'withdrawn'::character varying])::text[]))),
     CONSTRAINT grievances_status_check CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'resolved'::character varying, 'settled'::character varying, 'denied'::character varying, 'withdrawn'::character varying])::text[])))
 );
 

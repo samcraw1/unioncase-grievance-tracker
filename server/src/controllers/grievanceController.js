@@ -72,7 +72,7 @@ export const createGrievance = async (req, res) => {
         managementRepresentative || null,
         witnesses || [],
         stewardAssigned || null,
-        'filed',
+        'draft',
         'active'
       ]
     );
@@ -83,7 +83,7 @@ export const createGrievance = async (req, res) => {
     await client.query(
       `INSERT INTO grievance_timeline (grievance_id, step, step_date, handler_id, notes)
        VALUES ($1, $2, $3, $4, $5)`,
-      [grievance.id, 'filed', new Date(), req.user.userId, 'Grievance filed']
+      [grievance.id, 'draft', new Date(), req.user.userId, 'Case created as draft']
     );
 
     // Calculate and add initial deadlines

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, Bell, Save, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Bell, Save, CheckCircle, AlertCircle, Download, Trash2 } from 'lucide-react';
 import api from '../services/api';
+import PrivacyPromise from '../components/PrivacyPromise';
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -86,6 +87,52 @@ const SettingsPage = () => {
     }
   };
 
+  const handleExportAllCases = async () => {
+    try {
+      const response = await api.get('/grievances');
+      const cases = response.data.grievances || [];
+
+      if (cases.length === 0) {
+        alert('No cases to export');
+        return;
+      }
+
+      setMessage({
+        type: 'success',
+        text: `Exporting ${cases.length} case(s)...`
+      });
+
+      for (const grievance of cases) {
+        const blob = await api.get(`/grievances/${grievance.id}/export-pdf`, {
+          responseType: 'blob'
+        });
+        const url = window.URL.createObjectURL(blob.data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `case-${grievance.grievance_number}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+
+      setMessage({
+        type: 'success',
+        text: 'All cases exported successfully!'
+      });
+
+      setTimeout(() => {
+        setMessage({ type: '', text: '' });
+      }, 3000);
+    } catch (err) {
+      console.error('Error exporting cases:', err);
+      setMessage({
+        type: 'error',
+        text: 'Failed to export cases. Please try again.'
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -112,7 +159,7 @@ const SettingsPage = () => {
               Notification Settings
             </h1>
             <p className="text-sm text-gray-600 mt-2">
-              Manage how you receive notifications about grievances and deadlines
+              Manage how you receive notifications about cases and deadlines
             </p>
           </div>
 
@@ -141,7 +188,7 @@ const SettingsPage = () => {
                     Email Notifications
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    Receive email notifications for grievance updates and reminders
+                    Receive email notifications for case updates and reminders
                   </p>
                 </div>
                 <button
@@ -170,10 +217,10 @@ const SettingsPage = () => {
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
                   <div className="flex-1">
                     <h4 className="text-sm font-medium text-gray-900">
-                      New Grievance Assigned
+                      New Case Assigned
                     </h4>
                     <p className="text-xs text-gray-600 mt-0.5">
-                      When a new grievance is assigned to you as a steward
+                      When a new case is assigned to you as a steward
                     </p>
                   </div>
                   <button
@@ -264,7 +311,7 @@ const SettingsPage = () => {
                       Status Updates
                     </h4>
                     <p className="text-xs text-gray-600 mt-0.5">
-                      When a grievance moves to a new step in the process
+                      When a case moves to a new step in the process
                     </p>
                   </div>
                   <button
@@ -288,7 +335,7 @@ const SettingsPage = () => {
                       New Notes
                     </h4>
                     <p className="text-xs text-gray-600 mt-0.5">
-                      When someone adds a note or update to your grievances
+                      When someone adds a note or update to your cases
                     </p>
                   </div>
                   <button
@@ -309,10 +356,10 @@ const SettingsPage = () => {
                 <div className="flex items-center justify-between py-3">
                   <div className="flex-1">
                     <h4 className="text-sm font-medium text-gray-900">
-                      Grievance Resolved
+                      Case Resolved
                     </h4>
                     <p className="text-xs text-gray-600 mt-0.5">
-                      When your grievance has been resolved or closed
+                      When your case has been resolved or closed
                     </p>
                   </div>
                   <button
@@ -374,6 +421,37 @@ const SettingsPage = () => {
                 You can update your notification preferences at any time.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Privacy & Data Control */}
+        <div className="bg-white rounded-lg shadow p-6 mt-6">
+          <h2 className="text-xl font-bold mb-4">Privacy & Data Control</h2>
+
+          <PrivacyPromise compact={true} />
+
+          <div className="mt-6 pt-6 border-t">
+            <h3 className="font-semibold mb-3">Export Your Data</h3>
+            <div className="flex gap-3">
+              <button
+                className="btn btn-outline flex items-center space-x-2"
+                onClick={handleExportAllCases}
+              >
+                <Download className="h-4 w-4" />
+                <span>Export All My Cases</span>
+              </button>
+              <button
+                className="btn btn-outline text-gray-400 border-gray-300 cursor-not-allowed"
+                disabled
+                title="Coming soon after pilot"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete All Data (Coming Soon)
+              </button>
+            </div>
+            <p className="text-xs text-gray-600 mt-2">
+              Download your case records anytime as PDF files.
+            </p>
           </div>
         </div>
       </div>

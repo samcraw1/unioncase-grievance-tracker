@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, User, Hash, Building, Briefcase, Phone, AlertCircle } from 'lucide-react';
 import { getCraftsGrouped } from '../utils/unionConfig';
+import DisclaimerBanner from '../components/DisclaimerBanner';
+import PrivacyPromise from '../components/PrivacyPromise';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -67,12 +69,14 @@ const RegisterPage = () => {
             className="mx-auto h-24 w-auto mb-6"
           />
           <h1 className="text-4xl font-bold text-primary mb-2">
-            NALC Grievance Tracker
+            NALC Case Tracker
           </h1>
           <p className="text-gray-600">
             Create your account
           </p>
         </div>
+
+        <DisclaimerBanner variant="info" className="mb-6" />
 
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
@@ -335,6 +339,8 @@ const RegisterPage = () => {
             </p>
           </div>
         </div>
+
+        <PrivacyPromise compact={true} />
       </div>
     </div>
   );
