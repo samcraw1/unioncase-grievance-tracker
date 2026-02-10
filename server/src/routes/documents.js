@@ -1,27 +1,18 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import { put, del } from '@vercel/blob';
 import { authenticate } from '../middleware/auth.js';
 import { requireActiveSubscription } from '../middleware/subscription.js';
 import pool from '../config/database.js';
 
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Configure multer for memory storage (Vercel Blob upload)
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10485760 // 10MB default
+    fileSize: 10 * 1024 * 1024 // 10MB
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|pdf|doc|docx|txt/;
@@ -49,6 +40,13 @@ router.post('/:grievanceId', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: { message: 'No file uploaded' } });
     }
 
+    // Upload to Vercel Blob
+    const blob = await put(
+      `documents/${Date.now()}-${req.file.originalname}`,
+      req.file.buffer,
+      { access: 'public', contentType: req.file.mimetype }
+    );
+
     const result = await pool.query(
       `INSERT INTO documents
         (grievance_id, uploaded_by, file_name, file_path, file_type, file_size, label, description)
@@ -58,7 +56,7 @@ router.post('/:grievanceId', upload.single('file'), async (req, res) => {
         grievanceId,
         req.user.userId,
         req.file.originalname,
-        req.file.path,
+        blob.url,
         req.file.mimetype,
         req.file.size,
         label || req.file.originalname,
@@ -97,6 +95,27 @@ router.get('/:grievanceId', async (req, res) => {
   }
 });
 
+// Download a document (redirect to Blob URL)
+router.get('/:id/download', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'SELECT * FROM documents WHERE id = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: { message: 'Document not found' } });
+    }
+
+    res.redirect(result.rows[0].file_path);
+  } catch (error) {
+    console.error('Download document error:', error);
+    res.status(500).json({ error: { message: 'Failed to download document' } });
+  }
+});
+
 // Delete a document
 router.delete('/:id', async (req, res) => {
   try {
@@ -109,6 +128,13 @@ router.delete('/:id', async (req, res) => {
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: { message: 'Document not found or unauthorized' } });
+    }
+
+    // Clean up Blob storage (non-blocking)
+    try {
+      await del(result.rows[0].file_path);
+    } catch (blobErr) {
+      console.error('Failed to delete blob, continuing:', blobErr);
     }
 
     res.json({ message: 'Document deleted successfully' });

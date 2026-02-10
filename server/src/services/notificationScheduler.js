@@ -1,4 +1,3 @@
-import cron from 'node-cron';
 import pool from '../config/database.js';
 import {
   sendDeadlineReminderNotification,
@@ -8,17 +7,12 @@ import {
   sendTrialExpiredEmail
 } from './emailService.js';
 
-// Track which notifications have been sent to avoid duplicates
-const sentNotifications = new Set();
-
 // Check for upcoming and overdue deadlines
-const checkDeadlines = async () => {
+export const checkDeadlines = async () => {
   console.log(`[${new Date().toISOString()}] Running deadline check...`);
 
   try {
     const today = new Date();
-    const threeDaysFromNow = new Date(today);
-    threeDaysFromNow.setDate(today.getDate() + 3);
 
     // Get all active grievances with deadlines
     const result = await pool.query(
@@ -49,7 +43,6 @@ const checkDeadlines = async () => {
     );
 
     const deadlines = result.rows;
-
     console.log(`Found ${deadlines.length} active deadlines to check`);
 
     for (const deadline of deadlines) {
@@ -76,13 +69,6 @@ const checkDeadlines = async () => {
         continue;
       }
 
-      const notificationKey = `${deadline.deadline_id}_${daysUntil}`;
-
-      // Check if already sent this notification
-      if (sentNotifications.has(notificationKey)) {
-        continue;
-      }
-
       const user = {
         first_name: deadline.first_name,
         last_name: deadline.last_name,
@@ -106,14 +92,12 @@ const checkDeadlines = async () => {
 
       // Send reminders based on user preferences
       if (notificationPrefs.reminder_days.includes(daysUntil) && daysUntil >= 0) {
-        console.log(`Sending ${daysUntil}-day reminder for deadline ${deadline.deadline_id}`);
-        await sendDeadlineReminderNotification(user, grievance, deadlineInfo, daysUntil);
-        sentNotifications.add(notificationKey);
-
-        // Log notification
-        await pool.query(
+        // Use INSERT ON CONFLICT DO NOTHING for dedup
+        const insertResult = await pool.query(
           `INSERT INTO notifications (user_id, grievance_id, notification_type, title, message, is_read)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT DO NOTHING
+           RETURNING id`,
           [
             deadline.user_id,
             deadline.grievance_id,
@@ -123,18 +107,21 @@ const checkDeadlines = async () => {
             false
           ]
         );
+
+        // Only send email if notification was actually inserted (not a duplicate)
+        if (insertResult.rows.length > 0) {
+          console.log(`Sending ${daysUntil}-day reminder for deadline ${deadline.deadline_id}`);
+          await sendDeadlineReminderNotification(user, grievance, deadlineInfo, daysUntil);
+        }
       }
 
       // Send overdue notification
-      if (daysUntil < 0 && !sentNotifications.has(`${deadline.deadline_id}_overdue`)) {
-        console.log(`Sending overdue notification for deadline ${deadline.deadline_id}`);
-        await sendDeadlineOverdueNotification(user, grievance, deadlineInfo);
-        sentNotifications.add(`${deadline.deadline_id}_overdue`);
-
-        // Log notification
-        await pool.query(
+      if (daysUntil < 0) {
+        const insertResult = await pool.query(
           `INSERT INTO notifications (user_id, grievance_id, notification_type, title, message, is_read)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT DO NOTHING
+           RETURNING id`,
           [
             deadline.user_id,
             deadline.grievance_id,
@@ -144,31 +131,25 @@ const checkDeadlines = async () => {
             false
           ]
         );
+
+        if (insertResult.rows.length > 0) {
+          console.log(`Sending overdue notification for deadline ${deadline.deadline_id}`);
+          await sendDeadlineOverdueNotification(user, grievance, deadlineInfo);
+        }
       }
     }
 
-    // Clean up sent notifications older than 7 days
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
-
-    // Clear old entries from Set (in production, use Redis or database)
-    if (sentNotifications.size > 1000) {
-      sentNotifications.clear();
-    }
-
-    console.log(`Deadline check complete. Sent notifications count: ${sentNotifications.size}`);
+    console.log(`Deadline check complete.`);
   } catch (error) {
     console.error('Error checking deadlines:', error);
   }
 };
 
 // Check trial expirations and send reminders
-const checkTrialExpirations = async () => {
+export const checkTrialExpirations = async () => {
   console.log(`[${new Date().toISOString()}] Running trial expiration check...`);
 
   try {
-    const now = new Date();
-
     // Get all users on trial
     const result = await pool.query(
       `SELECT id, email, first_name, last_name, trial_ends_at, subscription_status
@@ -184,85 +165,78 @@ const checkTrialExpirations = async () => {
 
     for (const user of trialUsers) {
       const trialEndDate = new Date(user.trial_ends_at);
+      const now = new Date();
       const daysUntilExpiration = Math.ceil((trialEndDate - now) / (1000 * 60 * 60 * 24));
 
       console.log(`User ${user.email}: ${daysUntilExpiration} days until trial expires`);
 
-      // Trial has expired - mark as expired and send email
+      // Trial has expired
       if (daysUntilExpiration <= 0) {
-        const notificationKey = `trial_expired_${user.id}`;
+        // Update user status to expired
+        await pool.query(
+          'UPDATE users SET subscription_status = $1 WHERE id = $2',
+          ['expired', user.id]
+        );
 
-        if (!sentNotifications.has(notificationKey)) {
-          console.log(`Trial expired for user ${user.email}, updating status and sending email`);
+        const insertResult = await pool.query(
+          `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT DO NOTHING
+           RETURNING id`,
+          [
+            user.id,
+            'trial_expired',
+            'Trial Expired',
+            'Your 30-day trial has expired. Contact us to activate your subscription.',
+            false
+          ]
+        );
 
-          // Update user status to expired
-          await pool.query(
-            'UPDATE users SET subscription_status = $1 WHERE id = $2',
-            ['expired', user.id]
-          );
-
-          // Send expiration email
+        if (insertResult.rows.length > 0) {
+          console.log(`Trial expired for user ${user.email}`);
           await sendTrialExpiredEmail(user);
-          sentNotifications.add(notificationKey);
-
-          // Log notification in database
-          await pool.query(
-            `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [
-              user.id,
-              'trial_expired',
-              'Trial Expired',
-              'Your 30-day trial has expired. Contact us to activate your subscription.',
-              false
-            ]
-          );
         }
       }
-      // 2 days until expiration - send final warning
+      // 2 days until expiration
       else if (daysUntilExpiration === 2) {
-        const notificationKey = `trial_2day_${user.id}`;
+        const insertResult = await pool.query(
+          `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT DO NOTHING
+           RETURNING id`,
+          [
+            user.id,
+            'trial_reminder',
+            'Trial Ending Soon',
+            'Your trial ends in 2 days. Contact us to continue service.',
+            false
+          ]
+        );
 
-        if (!sentNotifications.has(notificationKey)) {
+        if (insertResult.rows.length > 0) {
           console.log(`Sending 2-day trial warning to ${user.email}`);
           await sendTrialTwoDayWarning(user);
-          sentNotifications.add(notificationKey);
-
-          // Log notification
-          await pool.query(
-            `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [
-              user.id,
-              'trial_reminder',
-              'Trial Ending Soon',
-              'Your trial ends in 2 days. Contact us to continue service.',
-              false
-            ]
-          );
         }
       }
-      // 7 days until expiration - send first warning
+      // 7 days until expiration
       else if (daysUntilExpiration === 7) {
-        const notificationKey = `trial_7day_${user.id}`;
+        const insertResult = await pool.query(
+          `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT DO NOTHING
+           RETURNING id`,
+          [
+            user.id,
+            'trial_reminder',
+            'Trial Ending Soon',
+            'Your trial ends in 7 days. Contact us to continue service.',
+            false
+          ]
+        );
 
-        if (!sentNotifications.has(notificationKey)) {
+        if (insertResult.rows.length > 0) {
           console.log(`Sending 7-day trial warning to ${user.email}`);
           await sendTrialSevenDayWarning(user);
-          sentNotifications.add(notificationKey);
-
-          // Log notification
-          await pool.query(
-            `INSERT INTO notifications (user_id, notification_type, title, message, is_read)
-             VALUES ($1, $2, $3, $4, $5)`,
-            [
-              user.id,
-              'trial_reminder',
-              'Trial Ending Soon',
-              'Your trial ends in 7 days. Contact us to continue service.',
-              false
-            ]
-          );
         }
       }
     }
@@ -273,51 +247,32 @@ const checkTrialExpirations = async () => {
   }
 };
 
-// Initialize cron jobs
+// Initialize cron jobs (local dev only)
 export const initializeScheduler = () => {
-  console.log('Initializing notification scheduler...');
+  console.log('Initializing notification scheduler (local dev)...');
 
-  // Run deadline check daily at 8:00 AM
-  cron.schedule('0 8 * * *', () => {
-    console.log('Running daily deadline check (8:00 AM)...');
-    checkDeadlines();
-  });
+  // Dynamic import node-cron only for local dev
+  import('node-cron').then((cronModule) => {
+    const cron = cronModule.default;
 
-  // Also run at noon for same-day reminders
-  cron.schedule('0 12 * * *', () => {
-    console.log('Running midday deadline check (12:00 PM)...');
-    checkDeadlines();
-  });
-
-  // NEW: Trial expiration check - run daily at 9:00 AM
-  cron.schedule('0 9 * * *', () => {
-    console.log('Running daily trial expiration check (9:00 AM)...');
-    checkTrialExpirations();
-  });
-
-  // For development: Run every 5 minutes
-  if (process.env.NODE_ENV !== 'production') {
     cron.schedule('*/5 * * * *', () => {
       console.log('Running development deadline check (every 5 minutes)...');
       checkDeadlines();
     });
 
-    // NEW: Check trials every 10 minutes in development
     cron.schedule('*/10 * * * *', () => {
       console.log('Running development trial check (every 10 minutes)...');
       checkTrialExpirations();
     });
-  }
 
-  console.log('Notification scheduler initialized successfully');
-  console.log('Schedule: Deadlines at 8:00 AM and 12:00 PM, Trials at 9:00 AM');
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Development mode: Deadlines every 5 min, Trials every 10 min');
-  }
+    console.log('Development scheduler: Deadlines every 5 min, Trials every 10 min');
+  }).catch((err) => {
+    console.warn('node-cron not available, skipping local scheduler:', err.message);
+  });
 
   // Run immediately on startup
   setTimeout(checkDeadlines, 5000);
-  setTimeout(checkTrialExpirations, 10000); // NEW: Check trials on startup
+  setTimeout(checkTrialExpirations, 10000);
 };
 
-export default { initializeScheduler };
+export default { initializeScheduler, checkDeadlines, checkTrialExpirations };

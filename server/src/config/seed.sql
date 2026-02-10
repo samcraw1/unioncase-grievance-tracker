@@ -50,7 +50,7 @@ INSERT INTO users (
   'TEST003',
   'representative',
   'Test Facility',
-  'clerk',
+  'other',
   'apwu',
   '555-0003'
 );
