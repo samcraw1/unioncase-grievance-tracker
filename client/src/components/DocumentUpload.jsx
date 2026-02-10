@@ -3,6 +3,7 @@ import { Upload, File, X, Check, AlertCircle } from 'lucide-react';
 import { validateFileSize, validateFileType } from '../utils/validation';
 import { formatFileSize } from '../utils/formatters';
 import { ButtonLoader } from './LoadingSpinner';
+import api from '../services/api';
 
 /**
  * DocumentUpload - Enhanced component for uploading documents to grievances
@@ -113,19 +114,13 @@ const DocumentUpload = ({ grievanceId, onUploadSuccess, onUploadError }) => {
       formData.append('label', label);
       formData.append('description', description);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/documents/${grievanceId}`, {
-        method: 'POST',
+      const response = await api.post(`/documents/${grievanceId}`, formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const data = await response.json();
+      const data = response.data;
 
       // Reset form
       setSelectedFile(null);

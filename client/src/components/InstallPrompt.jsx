@@ -68,7 +68,7 @@ const InstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50 animate-slide-up">
+    <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-[60] animate-slide-up">
       <div className="bg-white rounded-lg shadow-2xl border-2 border-primary p-4">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">

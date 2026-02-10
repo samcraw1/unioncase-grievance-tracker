@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -8,8 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
   useEffect(() => {
     if (token) {
@@ -21,9 +19,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get(`${API_URL}/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/auth/profile');
       setUser(response.data);
 
       // Set subscription info from profile
@@ -34,7 +30,10 @@ export const AuthProvider = ({ children }) => {
       });
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      logout();
+      // Only logout on 401 (unauthorized), not on transient errors
+      if (error.response?.status === 401) {
+        logout();
+      }
     } finally {
       setLoading(false);
     }
@@ -42,14 +41,13 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const response = await api.post('/auth/login', {
         email,
         password
       });
 
       const { token: newToken, user: userData } = response.data;
       localStorage.setItem('token', newToken);
-      setToken(newToken);
       setUser(userData);
 
       // Set subscription info from login response
@@ -58,6 +56,10 @@ export const AuthProvider = ({ children }) => {
         trialStartsAt: userData.trialStartsAt,
         trialEndsAt: userData.trialEndsAt
       });
+
+      // Set token last to avoid triggering useEffect re-fetch
+      // since we already have the user data from the login response
+      setToken(newToken);
 
       return { success: true };
     } catch (error) {
@@ -70,11 +72,10 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, userData);
+      const response = await api.post('/auth/register', userData);
 
       const { token: newToken, user: newUser } = response.data;
       localStorage.setItem('token', newToken);
-      setToken(newToken);
       setUser(newUser);
 
       // Set subscription info from register response
@@ -83,6 +84,9 @@ export const AuthProvider = ({ children }) => {
         trialStartsAt: newUser.trialStartsAt,
         trialEndsAt: newUser.trialEndsAt
       });
+
+      // Set token last to avoid triggering useEffect re-fetch
+      setToken(newToken);
 
       return { success: true };
     } catch (error) {

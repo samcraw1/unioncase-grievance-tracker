@@ -47,7 +47,7 @@ const IOSInstallModal = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-t-2xl md:rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between rounded-t-2xl">

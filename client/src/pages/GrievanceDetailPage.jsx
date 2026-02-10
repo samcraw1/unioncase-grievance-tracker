@@ -191,6 +191,27 @@ const GrievanceDetailPage = () => {
     handleFiles(files);
   };
 
+  const handleDownloadDocument = async (doc) => {
+    try {
+      const response = await api.get(`/documents/${doc.id}/download`, {
+        responseType: 'blob'
+      });
+
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = doc.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading document:', err);
+      alert('Failed to download document. Please try again.');
+    }
+  };
+
   const handleDeleteDocument = async (docId) => {
     try {
       await api.delete(`/documents/${docId}`);
@@ -245,47 +266,12 @@ const GrievanceDetailPage = () => {
     }
   };
 
-  const getStatusBadgeClass = (status) => {
-    const classes = {
-      active: 'badge badge-filed',
-      filed: 'badge badge-filed',
-      informal_step_a: 'badge badge-step-a',
-      formal_step_a: 'badge badge-step-a',
-      step_b: 'badge badge-step-b',
-      arbitration: 'badge badge-arbitration',
-      resolved: 'badge badge-resolved',
-      settled: 'badge badge-settled',
-      denied: 'badge bg-red-100 text-red-800'
-    };
-    return classes[status] || 'badge';
-  };
-
-  const formatStatus = (status) => {
-    return status?.split('_').map(word =>
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ') || 'Unknown';
-  };
 
   const getStepIndex = (step) => {
     const steps = ['filed', 'informal_step_a', 'formal_step_a', 'step_b', 'arbitration', 'resolved'];
     return steps.indexOf(step);
   };
 
-  const getNextSteps = (currentStep) => {
-    const allSteps = [
-      { key: 'informal_step_a', label: 'Informal Step A' },
-      { key: 'formal_step_a', label: 'Formal Step A' },
-      { key: 'step_b', label: 'Step B' },
-      { key: 'arbitration', label: 'Arbitration' },
-      { key: 'resolved', label: 'Resolved' },
-      { key: 'settled', label: 'Settled' },
-      { key: 'denied', label: 'Denied' },
-      { key: 'withdrawn', label: 'Withdrawn' }
-    ];
-    const currentIndex = allSteps.findIndex(s => s.key === currentStep);
-    // Return steps after current, plus final statuses
-    return allSteps.filter((s, i) => i > currentIndex || ['resolved', 'settled', 'denied', 'withdrawn'].includes(s.key));
-  };
 
   const handleUpdateStep = async () => {
     if (!selectedStep) return;
@@ -357,7 +343,7 @@ const GrievanceDetailPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
@@ -726,14 +712,13 @@ const GrievanceDetailPage = () => {
 
                         {/* Action Buttons */}
                         <div className="mt-3 flex space-x-2">
-                          <a
-                            href={`${api.defaults.baseURL}/${doc.file_path}`}
-                            download={doc.file_name}
+                          <button
+                            onClick={() => handleDownloadDocument(doc)}
                             className="flex-1 flex items-center justify-center space-x-1 px-3 py-1.5 text-xs font-medium text-primary bg-primary bg-opacity-10 rounded hover:bg-opacity-20 transition-colors"
                           >
                             <Download className="h-3 w-3" />
                             <span>Download</span>
-                          </a>
+                          </button>
                           <button
                             onClick={() => setDeleteConfirm(doc.id)}
                             className="flex items-center justify-center px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
@@ -884,16 +869,16 @@ const GrievanceDetailPage = () => {
                 <div>
                   <span className="text-sm text-gray-600">Current Step</span>
                   <div className="mt-1">
-                    <span className={getStatusBadgeClass(grievance.current_step)}>
-                      {formatStatus(grievance.current_step)}
+                    <span className={getCaseStageBadgeClass(mapCaseStage(grievance.current_step, grievance.status))}>
+                      {mapCaseStage(grievance.current_step, grievance.status)}
                     </span>
                   </div>
                 </div>
                 <div>
                   <span className="text-sm text-gray-600">Overall Status</span>
                   <div className="mt-1">
-                    <span className={getStatusBadgeClass(grievance.status)}>
-                      {formatStatus(grievance.status)}
+                    <span className={`badge ${grievance.status === 'active' ? 'badge-filed' : 'badge-resolved'}`}>
+                      {grievance.status?.charAt(0).toUpperCase() + grievance.status?.slice(1) || 'Unknown'}
                     </span>
                   </div>
                 </div>
@@ -914,7 +899,7 @@ const GrievanceDetailPage = () => {
 
             {/* Step Update Modal */}
             {showStepModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
                 <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Update Case Status</h3>
 

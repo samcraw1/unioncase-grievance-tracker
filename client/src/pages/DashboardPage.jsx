@@ -59,26 +59,6 @@ const DashboardPage = () => {
     navigate('/login');
   };
 
-  const getStatusBadgeClass = (status) => {
-    const classes = {
-      active: 'badge badge-filed',
-      filed: 'badge badge-filed',
-      informal_step_a: 'badge badge-step-a',
-      formal_step_a: 'badge badge-step-a',
-      step_b: 'badge badge-step-b',
-      arbitration: 'badge badge-arbitration',
-      resolved: 'badge badge-resolved',
-      settled: 'badge badge-settled',
-      denied: 'badge bg-red-100 text-red-800'
-    };
-    return classes[status] || 'badge';
-  };
-
-  const formatStatus = (status) => {
-    return status.split('_').map(word =>
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-  };
 
   const calculateDaysActive = (createdAt) => {
     const created = new Date(createdAt);
@@ -457,8 +437,8 @@ const DashboardPage = () => {
                           className="px-6 py-4 whitespace-nowrap cursor-pointer"
                           onClick={() => navigate(`/grievances/${grievance.id}`)}
                         >
-                          <span className={getCaseStageBadgeClass(mapCaseStage(grievance.current_step, grievance.status))}>
-                            {mapCaseStage(grievance.current_step, grievance.status)}
+                          <span className={`badge ${grievance.status === 'active' ? 'badge-filed' : 'badge-resolved'}`}>
+                            {grievance.status?.charAt(0).toUpperCase() + grievance.status?.slice(1) || 'Unknown'}
                           </span>
                         </td>
                         <td
