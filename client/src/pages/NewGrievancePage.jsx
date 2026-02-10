@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ArrowLeft, AlertCircle, Plus, X, FileText } from 'lucide-react';
 import api from '../services/api';
@@ -8,7 +8,9 @@ import DisclaimerBanner from '../components/DisclaimerBanner';
 
 const NewGrievancePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -80,6 +82,25 @@ const NewGrievancePage = () => {
     // Fetch stewards
     fetchStewards();
   }, [user]);
+
+  // Merge AI-generated draft data from navigation state
+  useEffect(() => {
+    if (location.state?.draft) {
+      const draft = location.state.draft;
+      setFormData(prev => ({
+        ...prev,
+        contractArticle: draft.contractArticle || prev.contractArticle,
+        violationType: draft.violationType || prev.violationType,
+        briefDescription: draft.briefDescription || prev.briefDescription,
+        detailedDescription: draft.detailedDescription || prev.detailedDescription,
+        managementRepresentative: draft.managementRepresentative || prev.managementRepresentative,
+        witnesses: draft.witnesses?.length > 0 ? draft.witnesses : prev.witnesses,
+        incidentDate: draft.incidentDate || prev.incidentDate,
+        incidentTime: draft.incidentTime || prev.incidentTime,
+      }));
+      setDraftLoaded(true);
+    }
+  }, [location.state]);
 
   const fetchStewards = async () => {
     try {
@@ -244,6 +265,13 @@ const NewGrievancePage = () => {
               Complete all fields to document your case. This case is private unless you choose to share it with a steward.
             </p>
           </div>
+
+          {draftLoaded && (
+            <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded flex items-start">
+              <FileText className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+              <span className="text-sm">AI-generated draft loaded. Review and edit all fields before submitting.</span>
+            </div>
+          )}
 
           {submitError && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-start">

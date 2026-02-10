@@ -4,7 +4,7 @@ import {
   ArrowLeft, Calendar, Clock, User, FileText, Building,
   Briefcase, Users, AlertCircle, CheckCircle, MessageSquare,
   Paperclip, Plus, Send, Upload, X, Download, Trash2, Image as ImageIcon, Camera,
-  ChevronRight, ArrowRightCircle
+  ChevronRight, ArrowRightCircle, Bot
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -366,6 +366,13 @@ const GrievanceDetailPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('openChatWidget'))}
+                className="btn-secondary flex items-center space-x-2"
+              >
+                <Bot className="h-4 w-4" />
+                <span>Ask AI</span>
+              </button>
               <button
                 onClick={handleExportPDF}
                 disabled={exportingPDF}
