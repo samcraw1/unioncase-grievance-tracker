@@ -13,6 +13,7 @@ import IOSInstallModal from './components/IOSInstallModal';
 import MobileNav from './components/MobileNav';
 import DesktopSidebar from './components/DesktopSidebar';
 import TrialBanner from './components/TrialBanner';
+import ChatWidget from './components/ChatWidget';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -134,6 +135,7 @@ function App() {
         <AppRoutes />
       </div>
       {isAuthenticated && <MobileNav />}
+      {isAuthenticated && <ChatWidget />}
       <InstallPrompt />
       <IOSInstallModal />
     </>

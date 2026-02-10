@@ -16,7 +16,7 @@
   ],
   "functions": {
     "api/**/*.js": {
-      "includeFiles": "server/**",
+      "includeFiles": ["server/**", "CONTRACT_REFERENCE.md"],
       "memory": 512,
       "maxDuration": 30
     }

@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.js';
 import grievanceRoutes from './routes/grievances.js';
 import userRoutes from './routes/users.js';
 import documentRoutes from './routes/documents.js';
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/grievances', grievanceRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
