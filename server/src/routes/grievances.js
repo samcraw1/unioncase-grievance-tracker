@@ -49,6 +49,15 @@ router.get('/:id/export-pdf', async (req, res) => {
 
     const grievance = grievanceResult.rows[0];
 
+    // Check access permissions
+    if (
+      req.user.role === 'employee' &&
+      grievance.user_id !== req.user.userId &&
+      grievance.steward_assigned !== req.user.userId
+    ) {
+      return res.status(403).json({ error: { message: 'Access denied' } });
+    }
+
     // Fetch timeline
     const timelineResult = await pool.query(
       `SELECT * FROM grievance_timeline

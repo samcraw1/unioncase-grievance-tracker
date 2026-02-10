@@ -340,6 +340,27 @@ export const updateGrievanceStep = async (req, res) => {
     const { id } = req.params;
     const { newStep, notes } = req.body;
 
+    // Verify grievance exists and user has access
+    const grievanceCheck = await client.query(
+      'SELECT user_id, steward_assigned FROM grievances WHERE id = $1',
+      [id]
+    );
+
+    if (grievanceCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: { message: 'Grievance not found' } });
+    }
+
+    const g = grievanceCheck.rows[0];
+    if (
+      req.user.role === 'employee' &&
+      g.user_id !== req.user.userId &&
+      g.steward_assigned !== req.user.userId
+    ) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ error: { message: 'Access denied' } });
+    }
+
     // Update grievance step
     const result = await client.query(
       `UPDATE grievances
@@ -348,11 +369,6 @@ export const updateGrievanceStep = async (req, res) => {
        RETURNING *`,
       [newStep, id]
     );
-
-    if (result.rows.length === 0) {
-      await client.query('ROLLBACK');
-      return res.status(404).json({ error: { message: 'Grievance not found' } });
-    }
 
     // Add timeline entry
     await client.query(
@@ -391,6 +407,25 @@ export const addNote = async (req, res) => {
   try {
     const { id } = req.params;
     const { noteText, isInternal = false } = req.body;
+
+    // Verify grievance exists and user has access
+    const grievanceCheck = await pool.query(
+      'SELECT user_id, steward_assigned FROM grievances WHERE id = $1',
+      [id]
+    );
+
+    if (grievanceCheck.rows.length === 0) {
+      return res.status(404).json({ error: { message: 'Grievance not found' } });
+    }
+
+    const g = grievanceCheck.rows[0];
+    if (
+      req.user.role === 'employee' &&
+      g.user_id !== req.user.userId &&
+      g.steward_assigned !== req.user.userId
+    ) {
+      return res.status(403).json({ error: { message: 'Access denied' } });
+    }
 
     const result = await pool.query(
       `INSERT INTO notes (grievance_id, user_id, note_text, is_internal)

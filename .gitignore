@@ -65,3 +65,4 @@ workbox-*.js
 
 # Uploads (if any)
 uploads/
+.vercel

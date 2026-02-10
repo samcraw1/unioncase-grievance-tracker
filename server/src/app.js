@@ -14,9 +14,9 @@ const app = express();
 // Trust proxy - required for Vercel deployment
 app.set('trust proxy', 1);
 
-// CORS configuration - allow all origins
+// CORS configuration - restrict to allowed origins
 app.use(cors({
-  origin: true,
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true
 }));
 

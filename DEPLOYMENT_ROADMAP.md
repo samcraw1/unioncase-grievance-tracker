@@ -493,7 +493,7 @@ cd "/Users/sam/USPS Grivanance App/server" && npm run dev
 cd "/Users/sam/USPS Grivanance App/client" && npm run dev
 
 # Database operations
-PGPASSWORD="sammyandanna09" psql -U sammycrawford -d grievance_tracker
+PGPASSWORD="<your-password>" psql -U <your-username> -d grievance_tracker
 
 # Git operations
 git status
