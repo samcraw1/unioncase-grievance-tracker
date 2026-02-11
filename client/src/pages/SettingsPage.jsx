@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowLeft, Bell, Save, CheckCircle, AlertCircle, Download, Trash2 } from 'lucide-react';
+import { ArrowLeft, Bell, Save, CheckCircle, AlertCircle, Download, Trash2, Calendar, BellRing } from 'lucide-react';
 import api from '../services/api';
 import PrivacyPromise from '../components/PrivacyPromise';
 
@@ -22,9 +22,21 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
 
   useEffect(() => {
     fetchPreferences();
+    // Check push notification support
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      setPushSupported(true);
+      navigator.serviceWorker.ready.then(reg => {
+        reg.pushManager.getSubscription().then(sub => {
+          setPushEnabled(!!sub);
+        });
+      });
+    }
   }, []);
 
   const fetchPreferences = async () => {
@@ -86,6 +98,69 @@ const SettingsPage = () => {
       setSaving(false);
     }
   };
+
+  const handleTogglePush = async () => {
+    try {
+      setPushLoading(true);
+      const reg = await navigator.serviceWorker.ready;
+
+      if (pushEnabled) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await sub.unsubscribe();
+          await api.post('/features/push/unsubscribe', { endpoint: sub.endpoint });
+        }
+        setPushEnabled(false);
+        setMessage({ type: 'success', text: 'Push notifications disabled.' });
+      } else {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          setMessage({ type: 'error', text: 'Notification permission denied by your browser.' });
+          return;
+        }
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
+        });
+        await api.post('/features/push/subscribe', {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: btoa(String.fromCharCode(...new Uint8Array(sub.getKey('p256dh')))),
+            auth: btoa(String.fromCharCode(...new Uint8Array(sub.getKey('auth'))))
+          }
+        });
+        setPushEnabled(true);
+        setMessage({ type: 'success', text: 'Push notifications enabled!' });
+      }
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (err) {
+      console.error('Push toggle error:', err);
+      setMessage({ type: 'error', text: 'Failed to update push notifications.' });
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleDownloadCalendar = async () => {
+    try {
+      const response = await api.get('/features/calendar/feed.ics', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'unioncase-deadlines.ics';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      setMessage({ type: 'success', text: 'Calendar file downloaded! Import it into your calendar app.' });
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (err) {
+      console.error('Calendar download error:', err);
+      setMessage({ type: 'error', text: 'Failed to download calendar file.' });
+    }
+  };
+
+  const calendarFeedUrl = `${api.defaults.baseURL}/features/calendar/feed.ics`;
 
   const handleExportAllCases = async () => {
     try {
@@ -405,6 +480,108 @@ const SettingsPage = () => {
               )}
             </button>
           </div>
+        </div>
+
+        {/* Calendar Integration */}
+        <div className="card mt-6">
+          <div className="border-b border-gray-200 pb-4 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+              <Calendar className="h-6 w-6 text-primary mr-3" />
+              Calendar Integration
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Subscribe to your grievance deadlines in your calendar app
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-start space-x-4">
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900">Download Calendar File</h3>
+                <p className="text-xs text-gray-600 mt-1">
+                  Download an .ics file with all your active deadlines. Import it into Google Calendar, Outlook, or Apple Calendar.
+                </p>
+              </div>
+              <button
+                onClick={handleDownloadCalendar}
+                className="btn-primary px-4 py-2 flex items-center space-x-2 text-sm whitespace-nowrap"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download .ics</span>
+              </button>
+            </div>
+
+            <div className="p-3 bg-gray-50 rounded">
+              <h4 className="text-xs font-semibold text-gray-700 mb-1">Subscribe URL (for auto-sync)</h4>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={calendarFeedUrl}
+                  className="flex-1 text-xs bg-white border border-gray-300 rounded px-3 py-2 text-gray-600 font-mono"
+                  onClick={(e) => e.target.select()}
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(calendarFeedUrl);
+                    setMessage({ type: 'success', text: 'Calendar URL copied to clipboard!' });
+                    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+                  }}
+                  className="px-3 py-2 text-xs border border-gray-300 rounded hover:bg-gray-100 whitespace-nowrap"
+                >
+                  Copy
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Paste this URL in your calendar app's "Subscribe" or "Add by URL" feature for automatic updates.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Push Notifications */}
+        <div className="card mt-6">
+          <div className="border-b border-gray-200 pb-4 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+              <BellRing className="h-6 w-6 text-primary mr-3" />
+              Push Notifications
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Get real-time browser notifications for deadline alerts
+            </p>
+          </div>
+
+          {!pushSupported ? (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded">
+              <p className="text-sm text-amber-800">
+                Push notifications are not supported in this browser. Try using Chrome, Edge, or Firefox.
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900">
+                  Browser Push Notifications
+                </h3>
+                <p className="text-xs text-gray-600 mt-1">
+                  Receive alerts directly in your browser when deadlines are approaching or overdue.
+                </p>
+              </div>
+              <button
+                onClick={handleTogglePush}
+                disabled={pushLoading}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  pushEnabled ? 'bg-primary' : 'bg-gray-200'
+                } ${pushLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    pushEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Info Section */}

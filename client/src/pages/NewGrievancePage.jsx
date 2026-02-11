@@ -5,6 +5,7 @@ import { ArrowLeft, AlertCircle, Plus, X, FileText } from 'lucide-react';
 import api from '../services/api';
 import { getCraftsGrouped } from '../utils/unionConfig';
 import DisclaimerBanner from '../components/DisclaimerBanner';
+import TemplatePicker from '../components/TemplatePicker';
 
 const NewGrievancePage = () => {
   const navigate = useNavigate();
@@ -251,6 +252,19 @@ const NewGrievancePage = () => {
               <span className="text-sm">{submitError}</span>
             </div>
           )}
+
+          <TemplatePicker
+            unionType={user?.unionType}
+            onSelectTemplate={(template) => {
+              setFormData(prev => ({
+                ...prev,
+                contractArticle: template.contractArticle || prev.contractArticle,
+                violationType: template.violationType || prev.violationType,
+                briefDescription: template.briefDescription || prev.briefDescription,
+                detailedDescription: template.detailedDescription || prev.detailedDescription,
+              }));
+            }}
+          />
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Section 1: Grievant Information */}

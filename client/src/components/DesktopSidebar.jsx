@@ -1,11 +1,13 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Home, Plus, BookOpen, User, LogOut } from 'lucide-react';
+import { Home, Plus, BookOpen, User, LogOut, BarChart3 } from 'lucide-react';
 
 const DesktopSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  const isStewardOrRep = user?.role === 'steward' || user?.role === 'representative';
 
   const navItems = [
     {
@@ -14,6 +16,12 @@ const DesktopSidebar = () => {
       path: '/dashboard',
       active: location.pathname === '/dashboard' || location.pathname === '/'
     },
+    ...(isStewardOrRep ? [{
+      icon: BarChart3,
+      label: 'Workload',
+      path: '/steward-dashboard',
+      active: location.pathname === '/steward-dashboard'
+    }] : []),
     {
       icon: Plus,
       label: 'New Case',
