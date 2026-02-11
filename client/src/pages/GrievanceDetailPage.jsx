@@ -13,6 +13,8 @@ import imageCompression from 'browser-image-compression';
 import { mapCaseStage, getCaseStageBadgeClass, isArbitration, getNextStageOptions } from '../utils/caseStatus';
 import { formatCaseNumber } from '../utils/caseNumber';
 import CaseVisibilityIndicator from '../components/CaseVisibilityIndicator';
+import InfoRequestPanel from '../components/InfoRequestPanel';
+import CollaboratorPanel from '../components/CollaboratorPanel';
 
 const GrievanceDetailPage = () => {
   const navigate = useNavigate();
@@ -1050,6 +1052,12 @@ const GrievanceDetailPage = () => {
                 )}
               </div>
             </div>
+
+            {/* Information Requests */}
+            <InfoRequestPanel grievanceId={id} />
+
+            {/* Collaborators */}
+            <CollaboratorPanel grievanceId={id} />
           </div>
         </div>
       </div>

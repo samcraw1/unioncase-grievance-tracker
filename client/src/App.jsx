@@ -8,6 +8,7 @@ import GrievanceDetailPage from './pages/GrievanceDetailPage';
 import SettingsPage from './pages/SettingsPage';
 import ResourcesPage from './pages/ResourcesPage';
 import TrialExpiredPage from './pages/TrialExpiredPage';
+import StewardDashboardPage from './pages/StewardDashboardPage';
 import InstallPrompt from './components/InstallPrompt';
 import IOSInstallModal from './components/IOSInstallModal';
 import MobileNav from './components/MobileNav';
@@ -107,6 +108,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/steward-dashboard"
+        element={
+          <ProtectedRoute>
+            <StewardDashboardPage />
           </ProtectedRoute>
         }
       />
