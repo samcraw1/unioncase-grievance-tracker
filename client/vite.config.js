@@ -16,11 +16,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'images/nalc-logo.png', 'icons/*.png'],
+      includeAssets: ['favicon.ico', 'images/unioncase-logo.png', 'icons/*.png'],
       manifest: {
-        name: 'PostalGrieve - NALC Grievance Manager',
-        short_name: 'PostalGrieve',
-        description: 'Manage NALC grievances and union cases on the go',
+        name: 'UnionCase - AI Grievance Manager',
+        short_name: 'UnionCase',
+        description: 'AI-powered grievance management for postal workers',
         theme_color: '#003366',
         background_color: '#ffffff',
         display: 'standalone',

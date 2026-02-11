@@ -41,15 +41,15 @@ const LoginPage = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           <img
-            src="/images/nalc-logo.png"
-            alt="NALC Logo"
+            src="/images/unioncase-logo.png"
+            alt="UnionCase"
             className="mx-auto h-24 w-auto mb-6"
           />
           <h1 className="text-4xl font-bold text-primary mb-2">
-            Letter Carrier Case Tracker
+            UnionCase
           </h1>
           <p className="text-gray-600">
-            Built by a city carrier, for NALC and NRLCA stewards
+            AI-Powered Grievance Management for Postal Workers
           </p>
         </div>
       </div>

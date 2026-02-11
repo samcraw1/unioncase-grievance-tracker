@@ -158,12 +158,12 @@ const DashboardPage = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <img
-                src="/images/nalc-logo.png"
-                alt="NALC Logo"
+                src="/images/unioncase-logo.png"
+                alt="UnionCase"
                 className="h-12 w-auto"
               />
               <div>
-                <h1 className="text-2xl font-bold">NALC Case Tracker</h1>
+                <h1 className="text-2xl font-bold">UnionCase</h1>
                 <p className="text-sm text-gray-200">
                   Welcome, {user?.firstName} {user?.lastName}
                 </p>
