@@ -1,11 +1,13 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Home, Plus, BookOpen, User, LogOut } from 'lucide-react';
+import { Home, Plus, BookOpen, User, LogOut, BarChart3 } from 'lucide-react';
 
 const DesktopSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  const isStewardOrRep = user?.role === 'steward' || user?.role === 'representative';
 
   const navItems = [
     {
@@ -14,6 +16,12 @@ const DesktopSidebar = () => {
       path: '/dashboard',
       active: location.pathname === '/dashboard' || location.pathname === '/'
     },
+    ...(isStewardOrRep ? [{
+      icon: BarChart3,
+      label: 'Workload',
+      path: '/steward-dashboard',
+      active: location.pathname === '/steward-dashboard'
+    }] : []),
     {
       icon: Plus,
       label: 'New Case',
@@ -45,13 +53,13 @@ const DesktopSidebar = () => {
       <div className="p-6 border-b border-blue-800">
         <div className="flex items-center space-x-3">
           <img
-            src="/images/nalc-logo.png"
-            alt="NALC Logo"
+            src="/images/unioncase-logo.png"
+            alt="UnionCase"
             className="h-12 w-12 rounded"
           />
           <div>
             <h1 className="text-lg font-bold">UnionCase</h1>
-            <p className="text-xs text-blue-200">Case Tracker</p>
+            <p className="text-xs text-blue-200">Grievance Manager</p>
           </div>
         </div>
       </div>

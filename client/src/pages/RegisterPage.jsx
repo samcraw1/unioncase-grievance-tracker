@@ -64,12 +64,12 @@ const RegisterPage = () => {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <img
-            src="/images/nalc-logo.png"
-            alt="NALC Logo"
+            src="/images/unioncase-logo.png"
+            alt="UnionCase"
             className="mx-auto h-24 w-auto mb-6"
           />
           <h1 className="text-4xl font-bold text-primary mb-2">
-            NALC Case Tracker
+            UnionCase
           </h1>
           <p className="text-gray-600">
             Create your account
