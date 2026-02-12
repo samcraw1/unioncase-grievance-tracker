@@ -19,7 +19,14 @@ try {
   console.error('Failed to load CONTRACT_REFERENCE.md:', err.message);
 }
 
-const openai = new OpenAI();
+let _openai;
+function getOpenAI() {
+  if (!_openai) {
+    _openai = new OpenAI();
+  }
+  return _openai;
+}
+
 
 // --- Phase 2: Valid options for draft generation ---
 
@@ -175,7 +182,7 @@ export async function chat(messages, userContext) {
   // Truncate to last 20 messages to control token usage
   const truncated = messages.slice(-20);
 
-  const response = await openai.responses.create({
+  const response = await getOpenAI().responses.create({
     model: 'gpt-4o-mini',
     instructions: systemPrompt,
     input: truncated.map(m => ({
@@ -394,7 +401,7 @@ export async function caseChat(messages, caseContext, userContext) {
 
   const truncated = messages.slice(-20);
 
-  const response = await openai.responses.create({
+  const response = await getOpenAI().responses.create({
     model: 'gpt-4o-mini',
     instructions: systemPrompt,
     input: truncated.map(m => ({
@@ -417,7 +424,7 @@ export async function suggestArticle(grievanceId, userId, userRole) {
 
   const { grievance } = caseContext;
 
-  const response = await openai.responses.create({
+  const response = await getOpenAI().responses.create({
     model: 'gpt-4o-mini',
     instructions: `You are a USPS contract expert. Analyze this grievance and suggest the most relevant contract articles. Be specific about which sections apply and why.
 
@@ -654,7 +661,7 @@ export async function generateGrievanceDraft(messages, userContext) {
 
   const truncated = messages.slice(-20);
 
-  const response = await openai.responses.create({
+  const response = await getOpenAI().responses.create({
     model: 'gpt-4o-mini',
     instructions: systemPrompt,
     input: truncated.map(m => ({
