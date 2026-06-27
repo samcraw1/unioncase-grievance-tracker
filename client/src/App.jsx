@@ -9,6 +9,7 @@ import SettingsPage from './pages/SettingsPage';
 import ResourcesPage from './pages/ResourcesPage';
 import TrialExpiredPage from './pages/TrialExpiredPage';
 import StewardDashboardPage from './pages/StewardDashboardPage';
+import LandingPage from './pages/LandingPage';
 import InstallPrompt from './components/InstallPrompt';
 import IOSInstallModal from './components/IOSInstallModal';
 import MobileNav from './components/MobileNav';
@@ -127,7 +128,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <LandingPage />
+          </PublicRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );

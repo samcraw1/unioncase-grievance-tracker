@@ -700,6 +700,18 @@ CREATE TABLE IF NOT EXISTS public.chat_rate_limits (
     PRIMARY KEY (user_id, window_start)
 );
 
+
+--
+-- Name: chat_public_rate_limits; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE IF NOT EXISTS public.chat_public_rate_limits (
+    ip_address text NOT NULL,
+    window_start timestamp without time zone NOT NULL,
+    count integer NOT NULL DEFAULT 1,
+    PRIMARY KEY (ip_address, window_start)
+);
+
 --
 -- PostgreSQL database dump complete
 --
